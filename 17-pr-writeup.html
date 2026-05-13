@@ -355,7 +355,7 @@
   <div class="page">
 
     <header class="page-head">
-      <div class="eyebrow">Pull request · Birchline</div>
+      <div class="eyebrow">Pull request · Acme</div>
       <h1>#312 — Move notification delivery onto a queue</h1>
       <div class="pr-meta">
         <span class="stat"><strong>9</strong> files</span>
@@ -569,7 +569,7 @@
           <h2>Rollout</h2>
           <p class="lede">Behind <code>notify_queue_v2</code>. The old inline path stays in the codebase, dead but dormant, for one release in case we need to flip back.</p>
           <div class="rollout">
-            <div class="step"><div class="when">Day 0</div><div class="pct">internal</div><div class="d">Birchline team only. Watch dead-letter table + worker error rate.</div></div>
+            <div class="step"><div class="when">Day 0</div><div class="pct">internal</div><div class="d">Acme team only. Watch dead-letter table + worker error rate.</div></div>
             <div class="step"><div class="when">Day 2</div><div class="pct">10%</div><div class="d">Random sample. Alert if dead-letter rate &gt; 0.5% of sends.</div></div>
             <div class="step"><div class="when">Day 4</div><div class="pct">100%</div><div class="d">Ramp fully, delete the inline path in a follow-up PR next week.</div></div>
           </div>

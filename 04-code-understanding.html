@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>How authentication flows through birchline/web</title>
+<title>How authentication flows through acme/web</title>
 <style>
   :root {
     --ivory: #FAF9F5;
@@ -255,10 +255,10 @@
 <div class="page">
 
   <header>
-    <div class="repo-line">birchline/web · architecture note</div>
+    <div class="repo-line">acme/web · architecture note</div>
     <h1>How authentication flows through the codebase</h1>
     <p class="summary">
-      Birchline uses cookie-based sessions: the browser never holds a bearer token directly. Every authenticated request hits <code>/api/*</code>, passes through a single <code>verifyToken()</code> middleware, and resolves to a <code>Session</code> row that downstream handlers read off <code>req.ctx</code>. The middleware is the only place that talks to the session store, which is the only place that talks to the <code>sessions</code> table — so there's exactly one trust boundary to reason about.
+      Acme uses cookie-based sessions: the browser never holds a bearer token directly. Every authenticated request hits <code>/api/*</code>, passes through a single <code>verifyToken()</code> middleware, and resolves to a <code>Session</code> row that downstream handlers read off <code>req.ctx</code>. The middleware is the only place that talks to the session store, which is the only place that talks to the <code>sessions</code> table — so there's exactly one trust boundary to reason about.
     </p>
   </header>
 
@@ -276,7 +276,7 @@
         <g>
           <rect class="box" x="30"  y="40" width="150" height="64" rx="10"></rect>
           <text x="105" y="68" text-anchor="middle">Browser</text>
-          <text class="sub" x="105" y="84" text-anchor="middle">birchline.app</text>
+          <text class="sub" x="105" y="84" text-anchor="middle">acme.app</text>
         </g>
         <g>
           <rect class="box" x="245" y="40" width="150" height="64" rx="10"></rect>

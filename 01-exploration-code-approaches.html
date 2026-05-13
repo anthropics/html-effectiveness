@@ -257,7 +257,7 @@
   <div class="page">
 
     <header class="page-head">
-      <div class="eyebrow">Exploration · Birchline web client</div>
+      <div class="eyebrow">Exploration · Acme web client</div>
       <h1>Three ways to implement debounced search</h1>
       <div class="prompt-box">
         <span class="label">Prompt</span>
@@ -413,7 +413,7 @@
           </div>
           <div class="row">
             <div class="cell pro">Callback form skips intermediate re-renders</div>
-            <div class="cell con">Uncontrolled input diverges from Birchline form patterns</div>
+            <div class="cell con">Uncontrolled input diverges from Acme form patterns</div>
           </div>
           <div class="row">
             <div class="cell pro">Well-tested edge cases (unmount, flush, cancel)</div>
@@ -437,7 +437,7 @@
       <h2>Recommendation</h2>
       <p>
         Go with <strong>approach 02, the custom <code>useDebounce</code> hook</strong>.
-        Birchline already has three places that hand-roll the inline pattern
+        Acme already has three places that hand-roll the inline pattern
         (task filter, command palette, member picker), so extracting one
         shared hook removes duplication without taking on a new dependency.
       </p>

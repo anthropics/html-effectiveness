@@ -164,7 +164,7 @@
     <div class="eyebrow">Illustrations &amp; Diagrams · Flowchart</div>
     <h1>What happens when you <code>git push</code></h1>
     <p class="lead">
-      The deploy pipeline for <code>birchline/web</code>, drawn from <code>.github/workflows/</code> and the
+      The deploy pipeline for <code>acme/web</code>, drawn from <code>.github/workflows/</code> and the
       Argo manifests. Click any step to see what runs, how long it usually takes, and where it can short-circuit.
     </p>
   </header>
@@ -235,7 +235,7 @@
           <g class="node" data-k="build">
             <rect x="210" y="368" width="200" height="48"/>
             <text x="310" y="388" text-anchor="middle">Build + push image</text>
-            <text class="sub" x="310" y="404" text-anchor="middle">ghcr.io/birchline/web</text>
+            <text class="sub" x="310" y="404" text-anchor="middle">ghcr.io/acme/web</text>
           </g>
 
           <g class="node" data-k="canary">
@@ -331,7 +331,7 @@ const DETAIL = {
     title: "Build + push image",
     meta: "github actions · ~4 min",
     body: "Docker buildx with layer caching. Tags the image with the short SHA and pushes to GHCR. This is the first step that produces an artifact.",
-    code: "tags: ghcr.io/birchline/web:${{ github.sha }}"
+    code: "tags: ghcr.io/acme/web:${{ github.sha }}"
   },
   canary: {
     title: "Argo canary 5%",
@@ -361,7 +361,7 @@ const DETAIL = {
     title: "Smoke tests in prod",
     meta: "github actions · ~90s",
     body: "A tiny Playwright suite hits the public URL: load the homepage, sign in with a synthetic account, create and delete one record.",
-    code: "run: pnpm playwright test smoke/\nenv:\n  BASE_URL: https://birchline.app"
+    code: "run: pnpm playwright test smoke/\nenv:\n  BASE_URL: https://acme.app"
   },
   done: {
     title: "Deploy complete",

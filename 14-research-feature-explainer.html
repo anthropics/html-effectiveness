@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>How rate limiting works in birchline/api</title>
+<title>How rate limiting works in acme/api</title>
 <style>
   :root {
     --ivory:   #FAF9F5;
@@ -247,7 +247,7 @@
   <main>
     <header>
       <div class="eyebrow">Research &amp; Learning · feature summary</div>
-      <h1>How rate limiting works in <code>birchline/api</code></h1>
+      <h1>How rate limiting works in <code>acme/api</code></h1>
       <div class="tldr" id="tldr">
         <b>TL;DR</b> — Every request passes through <code>rateLimit()</code> middleware, which resolves the
         caller to a <em>bucket key</em>, fetches a token-bucket from Redis, and either consumes one token or
@@ -350,7 +350,7 @@ X-RateLimit-Remaining: 0
     <h2 id="faq">FAQ</h2>
     <dl class="faq">
       <dt>How do I exempt internal traffic?</dt>
-      <dd>Set <code>x-birchline-internal: 1</code> from the caller; the middleware checks it against the
+      <dd>Set <code>x-acme-internal: 1</code> from the caller; the middleware checks it against the
         mTLS peer name and skips the bucket entirely.</dd>
 
       <dt>Where do I see who's getting limited?</dt>

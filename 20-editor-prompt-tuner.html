@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Birchline — Support reply prompt tuner</title>
+<title>Acme — Support reply prompt tuner</title>
 <style>
   :root {
     --ivory: #FAF9F5;
@@ -290,9 +290,9 @@
 <div class="wrap">
 
   <header>
-    <div class="eyebrow">Birchline / editor / prompt-tuner</div>
+    <div class="eyebrow">Acme / editor / prompt-tuner</div>
     <h1>Support reply draft prompt</h1>
-    <p class="sub">Edit the system prompt on the left and watch three real sample tickets re-render the filled template on the right, live as you type. When it reads well across all three moods, copy the template out.</p>
+    <p class="sub">Edit the system prompt on the left and watch three sample tickets re-render the filled template on the right, live as you type. When it reads well across all three moods, copy the template out.</p>
   </header>
 
   <div class="toolbar">
@@ -339,7 +339,7 @@
   // ---------------------------------------------------------------------------
 
   var DEFAULT_TEMPLATE =
-'You are a support agent for Birchline, a project workspace for small teams.\n' +
+'You are a support agent for Acme, a project workspace for small teams.\n' +
 '\n' +
 'A customer named {{customer_name}} on the {{plan_tier}} plan wrote in about:\n' +
 '"{{ticket_subject}}"\n' +
@@ -348,7 +348,7 @@
 '{{ticket_body}}\n' +
 '\n' +
 'Write a reply that is {{tone}}, no more than 120 words, and ends with a single concrete next step.\n' +
-'Never promise a refund without escalating. Sign off as "The Birchline team."';
+'Never promise a refund without escalating. Sign off as "The Acme team."';
 
   var SAMPLES = [
     {
@@ -358,7 +358,7 @@
         customer_name: 'Priya N.',
         plan_tier: 'Free',
         ticket_subject: 'Where did my board go?',
-        ticket_body: 'Hi — I made a board yesterday called "Spring launch" with my coworker and today I can’t find it anywhere. I’m new to Birchline and I’m not sure if I deleted it by accident or if I’m just looking in the wrong place. Can you help?',
+        ticket_body: 'Hi — I made a board yesterday called "Spring launch" with my coworker and today I can’t find it anywhere. I’m new to Acme and I’m not sure if I deleted it by accident or if I’m just looking in the wrong place. Can you help?',
         tone: 'warm and patient'
       }
     },
@@ -380,7 +380,7 @@
         customer_name: 'Lena K.',
         plan_tier: 'Studio',
         ticket_subject: 'Update billing entity on next invoice',
-        ticket_body: 'Hey folks! We just spun up a new holding company (Korhonen Studio Oy) and finance would love the May invoice to use that name + our new VAT ID, FI28361049. No rush at all, just want it sorted before the cycle runs. Thanks a million.',
+        ticket_body: 'Hey folks! We just spun up a new holding company (ACME Corp Oy) and finance would love the May invoice to use that name + our new VAT ID, FI00000000. No rush at all, just want it sorted before the cycle runs. Thanks a million.',
         tone: 'brisk and friendly'
       }
     }
