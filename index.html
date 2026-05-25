@@ -4,30 +4,100 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The unreasonable effectiveness of HTML — examples</title>
+<script>
+/* Set the theme before first paint to avoid a flash. Stored choice wins;
+   otherwise follow the OS preference. localStorage may be blocked (e.g. file://) — fail soft. */
+(function () {
+  try {
+    var t = localStorage.getItem("theme");
+    if (t !== "dark" && t !== "light")
+      t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {
+    document.documentElement.setAttribute("data-theme", "light");
+  }
+})();
+</script>
 <style>
   :root {
-    --ivory:  #FAF9F5;
-    --paper:  #FFFFFF;
-    --slate:  #141413;
+    /* ── brand palette — constant in both themes ── */
     --clay:   #D97757;
+    --clay-soft:#E08A6B;   /* clay lifted for legibility on dark surfaces */
     --clay-d: #B85C3E;
     --oat:    #E3DACC;
     --olive:  #788C5D;
+    --slate:  #141413;
+    --ivory:  #FAF9F5;
+    --paper:  #FFFFFF;
     --g100:   #F0EEE6;
     --g200:   #E6E3DA;
     --g300:   #D1CFC5;
     --g500:   #87867F;
     --g700:   #3D3D3A;
+
+    /* ── semantic roles — light (default) ── */
+    --bg:            #FAF9F5;
+    --surface:       #FFFFFF;
+    --text:          #141413;
+    --text-soft:     #3D3D3A;
+    --text-mute:     #87867F;
+    --border:        #D1CFC5;
+    --border-subtle: #E6E3DA;
+    --fill:          #F0EEE6;
+    --accent:        #D97757;
+    --accent-strong: #B85C3E;
+
     --serif: ui-serif, Georgia, "Times New Roman", Times, serif;
     --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+
+    color-scheme: light;
   }
+
+  /* ── semantic roles — dark ── */
+  [data-theme="dark"] {
+    --bg:            #1A1815;
+    --surface:       #211F1B;
+    --text:          #ECEAE3;
+    --text-soft:     #C9C6BD;
+    --text-mute:     #9C9A93;
+    --border:        #3A382F;
+    --border-subtle: #2B2924;
+    --fill:          #26241E;
+    --accent:        var(--clay-soft);
+    --accent-strong: #D97757;
+
+    color-scheme: dark;
+  }
+
+  /* ── theme toggle (identical across the gallery) ── */
+  .theme-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 1000;
+    width: 38px; height: 38px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+  }
+  .theme-toggle:hover { border-color: var(--text); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .theme-toggle svg { width: 18px; height: 18px; }
+  .theme-toggle .sun  { display: none; }
+  .theme-toggle .moon { display: block; }
+  [data-theme="dark"] .theme-toggle .sun  { display: block; }
+  [data-theme="dark"] .theme-toggle .moon { display: none; }
+  @media print { .theme-toggle { display: none; } }
+
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body {
     margin: 0;
-    background: var(--ivory);
-    color: var(--slate);
+    background: var(--bg);
+    color: var(--text);
     font-family: var(--sans);
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
@@ -38,7 +108,7 @@
 
   header.masthead {
     padding: 80px 0 56px;
-    border-bottom: 1.5px solid var(--g300);
+    border-bottom: 1.5px solid var(--border);
     margin-bottom: 12px;
     position: relative;
     overflow: visible;
@@ -48,7 +118,7 @@
     font-size: 12px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--g500);
+    color: var(--text-mute);
     margin-bottom: 18px;
     display: flex;
     align-items: center;
@@ -57,7 +127,7 @@
   .eyebrow::before {
     content: "";
     width: 24px; height: 1.5px;
-    background: var(--clay);
+    background: var(--accent);
   }
   h1 {
     font-family: var(--serif);
@@ -70,16 +140,16 @@
   }
   h1 em {
     font-style: italic;
-    color: var(--clay);
+    color: var(--accent);
   }
   .intro {
     font-size: 16.5px;
-    color: var(--g700);
+    color: var(--text-soft);
     margin: 22px 0 0;
     max-width: 620px;
   }
-  .intro a { color: var(--clay); text-decoration-color: var(--oat); text-underline-offset: 3px; }
-  .intro a:hover { text-decoration-color: var(--clay); }
+  .intro a { color: var(--accent); text-decoration-color: var(--oat); text-underline-offset: 3px; }
+  .intro a:hover { text-decoration-color: var(--accent); }
 
   .hero-grid {
     display: grid;
@@ -99,8 +169,8 @@
   @media (max-width: 880px) { .hero-fig { max-width: 400px; margin-top: 28px; } }
   .hero-fig .pane {
     border-radius: 10px;
-    border: 1.5px solid var(--g300);
-    background: var(--paper);
+    border: 1.5px solid var(--border);
+    background: var(--surface);
     padding: 14px;
     aspect-ratio: 4/5;
     display: flex;
@@ -109,12 +179,12 @@
     position: relative;
   }
   .hero-fig .pane.md {
-    background: var(--g100);
+    background: var(--fill);
     transform: rotate(-2.5deg) translateY(6px);
   }
   .hero-fig .pane.html {
     transform: rotate(1.5deg);
-    border-color: var(--slate);
+    border-color: var(--text);
     box-shadow: 0 12px 32px rgba(20,20,19,.10);
   }
   .hero-fig .tag {
@@ -124,18 +194,18 @@
     font-size: 9.5px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    background: var(--ivory);
+    background: var(--bg);
     padding: 2px 7px;
-    border: 1.5px solid var(--g300);
+    border: 1.5px solid var(--border);
     border-radius: 6px;
-    color: var(--g500);
+    color: var(--text-mute);
   }
-  .hero-fig .pane.html .tag { border-color: var(--slate); color: var(--slate); }
-  .hero-fig .l { height: 6px; border-radius: 3px; background: var(--g300); }
+  .hero-fig .pane.html .tag { border-color: var(--text); color: var(--text); }
+  .hero-fig .l { height: 6px; border-radius: 3px; background: var(--border); }
   .hero-fig .l.w90 { width: 90%; } .hero-fig .l.w75 { width: 75%; }
   .hero-fig .l.w60 { width: 60%; } .hero-fig .l.w82 { width: 82%; }
   .hero-fig .l.w70 { width: 70%; } .hero-fig .l.w50 { width: 50%; }
-  .hero-fig .pane.html .l { background: var(--g200); }
+  .hero-fig .pane.html .l { background: var(--border-subtle); }
   .hero-fig .pane.html .blk {
     border-radius: 5px;
     flex: 1;
@@ -148,7 +218,7 @@
     position: absolute;
     left: 18%; right: 18%; top: 28%;
     height: 40%;
-    border: 2px solid var(--clay);
+    border: 2px solid var(--accent);
     border-radius: 50%;
     opacity: .7;
   }
@@ -157,9 +227,9 @@
   }
   .hero-fig .pane.html .bar { flex: 1; border-radius: 3px 3px 0 0; }
   .hero-fig .pane.html .bar.b1 { height: 14px; background: var(--olive); }
-  .hero-fig .pane.html .bar.b2 { height: 26px; background: var(--clay); }
+  .hero-fig .pane.html .bar.b2 { height: 26px; background: var(--accent); }
   .hero-fig .pane.html .bar.b3 { height: 18px; background: var(--oat); }
-  .hero-fig .pane.html .bar.b4 { height: 30px; background: var(--slate); }
+  .hero-fig .pane.html .bar.b4 { height: 30px; background: var(--text); }
 
   /* ── toc pills ────────────────────────── */
 
@@ -172,11 +242,11 @@
   nav.toc a {
     font-size: 12.5px;
     padding: 7px 14px;
-    border: 1.5px solid var(--g300);
+    border: 1.5px solid var(--border);
     border-radius: 999px;
     text-decoration: none;
-    color: var(--g700);
-    background: var(--paper);
+    color: var(--text-soft);
+    background: var(--surface);
     transition: border-color 120ms, color 120ms, background 120ms;
     display: inline-flex;
     align-items: center;
@@ -185,10 +255,10 @@
   nav.toc a .n {
     font-family: var(--mono);
     font-size: 10px;
-    color: var(--g500);
+    color: var(--text-mute);
   }
-  nav.toc a:hover { border-color: var(--slate); color: var(--slate); }
-  nav.toc a:hover .n { color: var(--clay); }
+  nav.toc a:hover { border-color: var(--text); color: var(--text); }
+  nav.toc a:hover .n { color: var(--accent); }
 
   /* ── section ──────────────────────────── */
 
@@ -205,7 +275,7 @@
   .sec-head .idx {
     font-family: var(--mono);
     font-size: 13px;
-    color: var(--clay);
+    color: var(--accent);
     font-weight: 600;
     width: 34px;
     flex-shrink: 0;
@@ -220,14 +290,14 @@
   .sec-head .count {
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--g500);
-    background: var(--g100);
+    color: var(--text-mute);
+    background: var(--fill);
     padding: 2px 8px;
     border-radius: 999px;
   }
   .sec-intro {
     font-size: 14.5px;
-    color: var(--g700);
+    color: var(--text-soft);
     max-width: 700px;
     margin: 0 0 24px 50px;
   }
@@ -246,8 +316,8 @@
   a.card {
     display: flex;
     flex-direction: column;
-    background: var(--paper);
-    border: 1.5px solid var(--g300);
+    background: var(--surface);
+    border: 1.5px solid var(--border);
     border-radius: 14px;
     text-decoration: none;
     color: inherit;
@@ -257,13 +327,13 @@
   a.card:hover {
     transform: translateY(-3px);
     box-shadow: 0 10px 30px rgba(20, 20, 19, 0.10);
-    border-color: var(--slate);
+    border-color: var(--text);
   }
 
   .thumb {
     height: 132px;
-    background: var(--g100);
-    border-bottom: 1.5px solid var(--g200);
+    background: var(--fill);
+    border-bottom: 1.5px solid var(--border-subtle);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -271,22 +341,23 @@
     transition: background 150ms ease;
   }
   a.card:hover .thumb { background: var(--oat); }
+  [data-theme="dark"] a.card:hover .thumb { background: #2E2A22; }
   .thumb svg {
     width: 100%; height: 100%;
     overflow: visible;
   }
-  .thumb svg .st { stroke: var(--g500); fill: none; stroke-width: 2.5; }
-  .thumb svg .fl { fill: var(--g300); }
-  .thumb svg .cl { fill: var(--clay); }
+  .thumb svg .st { stroke: var(--text-mute); fill: none; stroke-width: 2.5; }
+  .thumb svg .fl { fill: var(--border); }
+  .thumb svg .cl { fill: var(--accent); }
   .thumb svg .ol { fill: var(--olive); }
-  .thumb svg .oa { fill: var(--oat); stroke: var(--g500); stroke-width: 2.5; }
-  .thumb svg .sl { fill: var(--slate); }
-  .thumb svg .wh { fill: var(--paper); stroke: var(--g500); stroke-width: 2.5; }
-  .thumb svg .ln { stroke: var(--g500); stroke-width: 2.5; fill: none; stroke-linecap: round; }
-  .thumb svg .lc { stroke: var(--clay); stroke-width: 2.5; fill: none; stroke-linecap: round; }
+  .thumb svg .oa { fill: var(--oat); stroke: var(--text-mute); stroke-width: 2.5; }
+  .thumb svg .sl { fill: var(--text); }
+  .thumb svg .wh { fill: var(--surface); stroke: var(--text-mute); stroke-width: 2.5; }
+  .thumb svg .ln { stroke: var(--text-mute); stroke-width: 2.5; fill: none; stroke-linecap: round; }
+  .thumb svg .lc { stroke: var(--accent); stroke-width: 2.5; fill: none; stroke-linecap: round; }
   .thumb svg .da { stroke-dasharray: 4 4; }
-  a.card:hover .thumb svg .fl { fill: var(--g500); }
-  a.card:hover .thumb svg .oa { fill: var(--paper); }
+  a.card:hover .thumb svg .fl { fill: var(--text-mute); }
+  a.card:hover .thumb svg .oa { fill: var(--surface); }
 
   .body { padding: 18px 20px 16px; display: flex; flex-direction: column; flex: 1; }
   .title {
@@ -294,13 +365,13 @@
     font-size: 19px;
     font-weight: 500;
     line-height: 1.22;
-    color: var(--slate);
+    color: var(--text);
     margin-bottom: 7px;
     letter-spacing: -0.008em;
   }
   .desc {
     font-size: 13.5px;
-    color: var(--g700);
+    color: var(--text-soft);
     line-height: 1.5;
     margin-bottom: 16px;
     flex: 1;
@@ -308,22 +379,22 @@
   .file {
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--g500);
-    border-top: 1px solid var(--g100);
+    color: var(--text-mute);
+    border-top: 1px solid var(--fill);
     padding-top: 11px;
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
-  .file .arrow { transition: transform 150ms ease; color: var(--g300); }
-  a.card:hover .file { color: var(--clay); }
-  a.card:hover .file .arrow { transform: translateX(3px); color: var(--clay); }
+  .file .arrow { transition: transform 150ms ease; color: var(--border); }
+  a.card:hover .file { color: var(--accent); }
+  a.card:hover .file .arrow { transform: translateX(3px); color: var(--accent); }
 
   /* ── footer ───────────────────────────── */
 
   footer {
     margin-top: 100px;
-    border-top: 1.5px solid var(--g300);
+    border-top: 1.5px solid var(--border);
     padding-top: 36px;
     display: flex;
     justify-content: space-between;
@@ -331,13 +402,17 @@
     gap: 20px;
     flex-wrap: wrap;
     font-size: 13px;
-    color: var(--g500);
+    color: var(--text-mute);
   }
-  footer .k { font-family: var(--serif); font-style: italic; color: var(--g700); font-size: 15px; }
-  footer a { color: var(--clay); text-decoration-color: var(--oat); text-underline-offset: 3px; }
+  footer .k { font-family: var(--serif); font-style: italic; color: var(--text-soft); font-size: 15px; }
+  footer a { color: var(--accent); text-decoration-color: var(--oat); text-underline-offset: 3px; }
 </style>
 </head>
 <body>
+<button class="theme-toggle" type="button" aria-label="Switch between light and dark theme" title="Switch theme">
+  <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.1 5.1l1.6 1.6M17.3 17.3l1.6 1.6M18.9 5.1l-1.6 1.6M6.7 17.3l-1.6 1.6"/></svg>
+  <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.6A8.2 8.2 0 1 1 9.4 3.5a6.4 6.4 0 0 0 11.1 11.1z"/></svg>
+</button>
 <div class="wrap">
 
   <header class="masthead">
@@ -818,5 +893,23 @@
   </footer>
 
 </div>
+<script>
+/* Theme toggle: flip data-theme, persist the choice, and keep following the OS
+   until the user makes an explicit choice. */
+(function () {
+  var root = document.documentElement;
+  var btn = document.querySelector(".theme-toggle");
+  if (btn) btn.addEventListener("click", function () {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+  var mq = window.matchMedia && matchMedia("(prefers-color-scheme: dark)");
+  if (mq && mq.addEventListener) mq.addEventListener("change", function (e) {
+    try { if (localStorage.getItem("theme")) return; } catch (_) {}
+    root.setAttribute("data-theme", e.matches ? "dark" : "light");
+  });
+})();
+</script>
 </body>
 </html>
