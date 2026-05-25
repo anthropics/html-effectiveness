@@ -4,8 +4,35 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Acme — Cycle 14 triage</title>
+<script>
+/* Set the theme before first paint to avoid a flash. Stored choice wins;
+   otherwise follow the OS preference. localStorage may be blocked (e.g. file://) — fail soft. */
+(function () {
+  try {
+    var t = localStorage.getItem("theme");
+    if (t !== "dark" && t !== "light")
+      t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {
+    document.documentElement.setAttribute("data-theme", "light");
+  }
+})();
+</script>
 <style>
   :root {
+/* ── semantic roles — light (default) ── */
+    --bg:        #FAF9F5;
+    --surface:   #FFFFFF;
+    --text:      #141413;
+    --text-soft: #3D3D3A;
+    --text-mute: #87867F;
+    --border:    #D1CFC5;
+    --fill:      #F0EEE6;
+    --accent:    #D97757;
+    --accent-strong: #B85C3E;
+    --clay-soft: #E08A6B;   /* clay lifted for legibility on dark surfaces */
+    --tint:      #E3DACC;   /* warm tinted / inset surface */
+    color-scheme: light;
     --ivory: #FAF9F5;
     --slate: #141413;
     --clay: #D97757;
@@ -24,8 +51,8 @@
   * { box-sizing: border-box; }
   html, body {
     margin: 0;
-    background: var(--ivory);
-    color: var(--slate);
+    background: var(--bg);
+    color: var(--text);
     font-family: var(--sans);
     font-size: 14px;
     line-height: 1.5;
@@ -43,7 +70,7 @@
     font-size: 11px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--gray-500);
+    color: var(--text-mute);
   }
   h1 {
     font-family: var(--serif);
@@ -53,19 +80,19 @@
     margin: 6px 0 4px;
   }
   .sub {
-    color: var(--gray-500);
+    color: var(--text-mute);
     max-width: 620px;
     margin: 0;
   }
   .hintline {
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--gray-500);
+    color: var(--text-mute);
     margin-top: 10px;
   }
   .hintline::before {
     content: "›";
-    color: var(--clay);
+    color: var(--accent);
     margin-right: 6px;
   }
 
@@ -74,40 +101,40 @@
     position: sticky;
     top: 0;
     z-index: 5;
-    background: var(--ivory);
+    background: var(--bg);
     display: flex;
     align-items: center;
     gap: 14px;
     padding: 14px 0 12px;
     margin-bottom: 14px;
-    border-bottom: 1.5px solid var(--gray-200);
+    border-bottom: 1.5px solid var(--border);
   }
   .summary {
     font-family: var(--mono);
     font-size: 12px;
-    color: var(--gray-800);
+    color: var(--text-soft);
     letter-spacing: 0.01em;
   }
-  .summary b { color: var(--slate); font-weight: 600; }
-  .summary .dot { color: var(--gray-200); margin: 0 4px; }
+  .summary b { color: var(--text); font-weight: 600; }
+  .summary .dot { color: var(--border); margin: 0 4px; }
   .spacer { flex: 1; }
   .filter-active {
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--clay-d);
-    background: #F5E6DE;
-    border: 1.5px solid #E8C9BA;
+    color: var(--accent-strong);
+    background: rgba(217,119,87,0.16);
+    border: 1.5px solid rgba(217,119,87,0.40);
     border-radius: 999px;
     padding: 4px 10px;
     cursor: pointer;
     display: none;
   }
   .filter-active.on { display: inline-block; }
-  .filter-active:hover { border-color: var(--clay); }
+  .filter-active:hover { border-color: var(--accent); }
   button.primary {
-    background: var(--slate);
-    color: var(--ivory);
-    border: 1.5px solid var(--slate);
+    background: var(--text);
+    color: var(--bg);
+    border: 1.5px solid var(--text);
     border-radius: 999px;
     font-family: var(--mono);
     font-size: 12px;
@@ -115,19 +142,19 @@
     cursor: pointer;
     letter-spacing: 0.01em;
   }
-  button.primary:hover { background: var(--gray-800); }
+  button.primary:hover { background: var(--text-soft); }
   button.primary.copied { background: var(--olive); border-color: var(--olive); }
   button.ghost {
     background: transparent;
-    color: var(--gray-800);
-    border: 1.5px solid var(--gray-200);
+    color: var(--text-soft);
+    border: 1.5px solid var(--border);
     border-radius: 999px;
     font-family: var(--mono);
     font-size: 12px;
     padding: 9px 16px;
     cursor: pointer;
   }
-  button.ghost:hover { border-color: var(--gray-500); }
+  button.ghost:hover { border-color: var(--text-mute); }
 
   /* ---------- board ---------- */
   .board {
@@ -137,33 +164,33 @@
     align-items: start;
   }
   .col {
-    background: var(--white);
-    border: 1.5px solid var(--gray-200);
+    background: var(--surface);
+    border: 1.5px solid var(--border);
     border-radius: 12px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     min-height: 200px;
   }
-  .col[data-col="now"]   { border-top: 3px solid var(--clay); }
+  .col[data-col="now"]   { border-top: 3px solid var(--accent); }
   .col[data-col="next"]  { border-top: 3px solid var(--olive); }
-  .col[data-col="later"] { border-top: 3px solid var(--gray-500); }
-  .col[data-col="cut"]   { border-top: 3px solid var(--gray-200); }
+  .col[data-col="later"] { border-top: 3px solid var(--text-mute); }
+  .col[data-col="cut"]   { border-top: 3px solid var(--border); }
   .col.dragover {
-    outline: 2px dashed var(--clay);
+    outline: 2px dashed var(--accent);
     outline-offset: -6px;
-    background: #FBF6F2;
+    background: rgba(217,119,87,0.10);
   }
   .col-head {
     position: sticky;
     top: 0;
     z-index: 1;
-    background: var(--white);
+    background: var(--surface);
     display: flex;
     align-items: baseline;
     gap: 8px;
     padding: 14px 14px 10px;
-    border-bottom: 1.5px solid var(--gray-50);
+    border-bottom: 1.5px solid var(--fill);
   }
   .col-head h2 {
     font-family: var(--serif);
@@ -176,9 +203,9 @@
     margin-left: auto;
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--gray-500);
-    background: var(--gray-50);
-    border: 1.5px solid var(--gray-200);
+    color: var(--text-mute);
+    background: var(--fill);
+    border: 1.5px solid var(--border);
     border-radius: 999px;
     padding: 1px 8px;
     min-width: 26px;
@@ -193,27 +220,27 @@
     min-height: 60px;
   }
   .col-foot {
-    border-top: 1.5px solid var(--gray-50);
+    border-top: 1.5px solid var(--fill);
     padding: 8px 14px 12px;
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--gray-500);
+    color: var(--text-mute);
     display: flex;
     justify-content: space-between;
   }
-  .col-foot b { color: var(--gray-800); font-weight: 600; }
+  .col-foot b { color: var(--text-soft); font-weight: 600; }
 
   /* ---------- ticket card ---------- */
   .ticket {
-    background: var(--white);
-    border: 1.5px solid var(--gray-200);
+    background: var(--surface);
+    border: 1.5px solid var(--border);
     border-radius: 8px;
     padding: 10px 11px 9px;
     cursor: grab;
     user-select: none;
     transition: border-color 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
   }
-  .ticket:hover { border-color: var(--gray-500); box-shadow: 0 1px 3px rgba(20,20,19,0.06); }
+  .ticket:hover { border-color: var(--text-mute); box-shadow: 0 1px 3px rgba(20,20,19,0.06); }
   .ticket:active { cursor: grabbing; }
   .ticket.dragging { opacity: .4; }
   .ticket.dim { opacity: .25; }
@@ -226,7 +253,7 @@
   .tid {
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--gray-500);
+    color: var(--text-mute);
     letter-spacing: 0.01em;
   }
   .tag {
@@ -240,16 +267,16 @@
     cursor: pointer;
   }
   .tag:hover { filter: brightness(0.96); }
-  .tag-bug   { background: #F5E2D8; color: var(--clay-d); border-color: #E8C9BA; }
-  .tag-feat  { background: #E8EDE0; color: #5C6F44; border-color: #CFDAC0; }
-  .tag-chore { background: var(--gray-50); color: var(--gray-800); border-color: var(--gray-200); }
-  .tag-debt  { background: var(--gray-50); color: var(--gray-800); border-color: var(--gray-200); }
+  .tag-bug   { background: rgba(217,119,87,0.16); color: var(--accent-strong); border-color: rgba(217,119,87,0.40); }
+  .tag-feat  { background: rgba(120,140,93,0.18); color: var(--olive); border-color: rgba(120,140,93,0.40); }
+  .tag-chore { background: var(--fill); color: var(--text-soft); border-color: var(--border); }
+  .tag-debt  { background: var(--fill); color: var(--text-soft); border-color: var(--border); }
   .est {
     margin-left: auto;
     font-family: var(--mono);
     font-size: 10px;
-    color: var(--gray-500);
-    border: 1.5px solid var(--gray-200);
+    color: var(--text-mute);
+    border: 1.5px solid var(--border);
     border-radius: 4px;
     width: 18px;
     height: 18px;
@@ -260,7 +287,7 @@
   .ttitle {
     font-size: 13px;
     line-height: 1.35;
-    color: var(--slate);
+    color: var(--text);
     margin-bottom: 7px;
   }
   .ticket-bot {
@@ -275,7 +302,7 @@
     height: 20px;
     border-radius: 50%;
     background: var(--oat);
-    color: var(--gray-800);
+    color: #3D3D3A;   /* dark initials — owner chips stay light (categorical) in both themes */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -283,14 +310,54 @@
   }
   .owner.o2 { background: #DCE4D2; }
   .owner.o3 { background: #ECD9CE; }
-  .owner.o4 { background: var(--gray-50); }
+  .owner.o4 { background: #E6E3DA; }
 
   @media (max-width: 920px) {
     .board { grid-template-columns: repeat(2, 1fr); }
   }
+/* ── semantic roles — dark ── */
+  [data-theme="dark"] {
+    --bg:        #1A1815;
+    --surface:   #211F1B;
+    --text:      #ECEAE3;
+    --text-soft: #C9C6BD;
+    --text-mute: #9C9A93;
+    --border:    #3A382F;
+    --fill:      #26241E;
+    --accent:    var(--clay-soft);
+    --accent-strong: #D97757;
+    --tint:      #2E2A22;
+    color-scheme: dark;
+  }
+
+  /* ── theme toggle (identical across the gallery) ── */
+  .theme-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 1000;
+    width: 38px; height: 38px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+  }
+  .theme-toggle:hover { border-color: var(--text); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .theme-toggle svg { width: 18px; height: 18px; }
+  .theme-toggle .sun  { display: none; }
+  .theme-toggle .moon { display: block; }
+  [data-theme="dark"] .theme-toggle .sun  { display: block; }
+  [data-theme="dark"] .theme-toggle .moon { display: none; }
+  @media print { .theme-toggle { display: none; } }
 </style>
 </head>
 <body>
+<button class="theme-toggle" type="button" aria-label="Switch between light and dark theme" title="Switch theme">
+  <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.1 5.1l1.6 1.6M17.3 17.3l1.6 1.6M18.9 5.1l-1.6 1.6M6.7 17.3l-1.6 1.6"/></svg>
+  <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.6A8.2 8.2 0 1 1 9.4 3.5a6.4 6.4 0 0 0 11.1 11.1z"/></svg>
+</button>
 <div class="wrap">
 
   <header>
@@ -568,6 +635,24 @@
   // ---------- init ----------
   tickets = INITIAL.map(function (t) { return Object.assign({}, t); });
   render();
+</script>
+<script>
+/* Theme toggle: flip data-theme, persist the choice, and keep following the OS
+   until the user makes an explicit choice. */
+(function () {
+  var root = document.documentElement;
+  var btn = document.querySelector(".theme-toggle");
+  if (btn) btn.addEventListener("click", function () {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+  var mq = window.matchMedia && matchMedia("(prefers-color-scheme: dark)");
+  if (mq && mq.addEventListener) mq.addEventListener("change", function (e) {
+    try { if (localStorage.getItem("theme")) return; } catch (_) {}
+    root.setAttribute("data-theme", e.matches ? "dark" : "light");
+  });
+})();
 </script>
 </body>
 </html>

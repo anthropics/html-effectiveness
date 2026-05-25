@@ -4,6 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Empty state — four visual directions</title>
+<script>
+/* Set the theme before first paint to avoid a flash. Stored choice wins;
+   otherwise follow the OS preference. localStorage may be blocked (e.g. file://) — fail soft. */
+(function () {
+  try {
+    var t = localStorage.getItem("theme");
+    if (t !== "dark" && t !== "light")
+      t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {
+    document.documentElement.setAttribute("data-theme", "light");
+  }
+})();
+</script>
   <style>
     :root {
       --ivory:    #FAF9F5;
@@ -17,10 +31,56 @@
       --gray-700: #3D3D3A;
       --white:    #FFFFFF;
 
+      /* semantic roles for chrome — these alias the palette, which flips under
+         [data-theme="dark"]; .stage re-pins the palette so the design previews
+         stay theme-independent (they have their own Light/Dark control). */
+      --bg: var(--ivory); --surface: var(--white); --text: var(--slate);
+      --text-soft: var(--gray-700); --text-mute: var(--gray-500);
+      --border: var(--gray-300); --fill: var(--gray-150);
+      --accent: var(--clay); --tint: var(--oat);
+      color-scheme: light;
+
       --serif: ui-serif, Georgia, 'Times New Roman', serif;
       --sans:  system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
       --mono:  ui-monospace, 'SF Mono', Menlo, Monaco, monospace;
     }
+
+    /* ── dark (chrome only) — flip the palette; brand clay/oat/olive stay.
+       .stage re-pins these to light below, so previews are unaffected. ── */
+    [data-theme="dark"] {
+      --ivory:    #1A1815;
+      --slate:    #ECEAE3;
+      --white:    #211F1B;
+      --gray-150: #26241E;
+      --gray-300: #3A382F;
+      --gray-500: #9C9A93;
+      --gray-700: #C9C6BD;
+      --accent:   #E08A6B;
+      --tint:     #2E2A22;
+      color-scheme: dark;
+    }
+
+    /* ── theme toggle (identical across the gallery) ── */
+    .theme-toggle {
+      position: fixed; top: 16px; right: 16px; z-index: 1000;
+      width: 38px; height: 38px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 1.5px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+    }
+    .theme-toggle:hover { border-color: var(--text); }
+    .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .theme-toggle svg { width: 18px; height: 18px; }
+    .theme-toggle .sun  { display: none; }
+    .theme-toggle .moon { display: block; }
+    [data-theme="dark"] .theme-toggle .sun  { display: block; }
+    [data-theme="dark"] .theme-toggle .moon { display: none; }
+    @media print { .theme-toggle { display: none; } }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -41,7 +101,7 @@
       z-index: 10;
       background: var(--ivory);
       border-bottom: 1.5px solid var(--gray-300);
-      padding: 14px 32px;
+      padding: 14px 64px 14px 32px;   /* clear the fixed theme toggle (top-right) */
       display: flex;
       align-items: center;
       gap: 18px;
@@ -95,7 +155,7 @@
     }
 
     .seg label:has(input:checked) {
-      background: var(--oat);
+      background: var(--tint);
     }
 
     /* ---------- page header ---------- */
@@ -174,7 +234,7 @@
       font-family: var(--mono);
       font-size: 11px;
       letter-spacing: 0.02em;
-      background: var(--oat);
+      background: var(--tint);
       color: var(--slate);
       padding: 4px 10px;
       border-radius: 8px;
@@ -211,7 +271,11 @@
        Theme tokens flip when .stage.dark is present.
        ========================================================= */
 
-    .stage        { --fg: var(--slate); --muted: var(--gray-500); --line: var(--gray-300); --panel: var(--white); }
+    /* re-pin the palette to light inside previews, so the page theme never
+       leaks into a design direction — each stage keeps its own Light/Dark control */
+    .stage        { --fg: var(--slate); --muted: var(--gray-500); --line: var(--gray-300); --panel: var(--white);
+                    --ivory:#FAF9F5; --slate:#141413; --white:#FFFFFF;
+                    --gray-150:#F0EEE6; --gray-300:#D1CFC5; --gray-500:#87867F; --gray-700:#3D3D3A; }
     .stage.dark   { --fg: #F0EEE6;      --muted: #9C9A93;         --line: #3D3D3A;         --panel: #1F1E1B;     }
 
     /* ---- A · Minimal ---- */
@@ -380,6 +444,10 @@
   </style>
 </head>
 <body>
+<button class="theme-toggle" type="button" aria-label="Switch between light and dark theme" title="Switch theme">
+  <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.1 5.1l1.6 1.6M17.3 17.3l1.6 1.6M18.9 5.1l-1.6 1.6M6.7 17.3l-1.6 1.6"/></svg>
+  <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.6A8.2 8.2 0 1 1 9.4 3.5a6.4 6.4 0 0 0 11.1 11.1z"/></svg>
+</button>
 
   <div class="toolbar">
     <div class="title">Acme · design exploration</div>
@@ -511,5 +579,23 @@
       stages.forEach((s) => s.classList.toggle('dark', dark));
     });
   </script>
+<script>
+/* Theme toggle: flip data-theme, persist the choice, and keep following the OS
+   until the user makes an explicit choice. */
+(function () {
+  var root = document.documentElement;
+  var btn = document.querySelector(".theme-toggle");
+  if (btn) btn.addEventListener("click", function () {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+  var mq = window.matchMedia && matchMedia("(prefers-color-scheme: dark)");
+  if (mq && mq.addEventListener) mq.addEventListener("change", function (e) {
+    try { if (localStorage.getItem("theme")) return; } catch (_) {}
+    root.setAttribute("data-theme", e.matches ? "dark" : "light");
+  });
+})();
+</script>
 </body>
 </html>

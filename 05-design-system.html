@@ -4,8 +4,35 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Acme — Design System Reference</title>
+<script>
+/* Set the theme before first paint to avoid a flash. Stored choice wins;
+   otherwise follow the OS preference. localStorage may be blocked (e.g. file://) — fail soft. */
+(function () {
+  try {
+    var t = localStorage.getItem("theme");
+    if (t !== "dark" && t !== "light")
+      t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {
+    document.documentElement.setAttribute("data-theme", "light");
+  }
+})();
+</script>
 <style>
   :root {
+/* ── semantic roles — light (default) ── */
+    --bg:        #FAF9F5;
+    --surface:   #FFFFFF;
+    --text:      #141413;
+    --text-soft: #3D3D3A;
+    --text-mute: #87867F;
+    --border:    #D1CFC5;
+    --fill:      #F0EEE6;
+    --accent:    #D97757;
+    --accent-strong: #B85C3E;
+    --clay-soft: #E08A6B;   /* clay lifted for legibility on dark surfaces */
+    --tint:      #E3DACC;   /* warm tinted / inset surface */
+    color-scheme: light;
     --ivory: #FAF9F5;
     --slate: #141413;
     --clay: #D97757;
@@ -23,7 +50,7 @@
 
     --radius-panel: 12px;
     --radius-row: 8px;
-    --border: 1.5px solid var(--gray-300);
+    --border-line: 1.5px solid var(--border);
   }
 
   * { box-sizing: border-box; }
@@ -31,8 +58,8 @@
   body {
     margin: 0;
     padding: 56px 24px 96px;
-    background: var(--ivory);
-    color: var(--slate);
+    background: var(--bg);
+    color: var(--text);
     font-family: var(--sans);
     font-size: 15px;
     line-height: 1.55;
@@ -53,14 +80,14 @@
   }
 
   header .sub {
-    color: var(--gray-500);
+    color: var(--text-mute);
     font-size: 14px;
     margin: 0 0 48px;
   }
   header .sub code {
     font-family: var(--mono);
     font-size: 13px;
-    background: var(--gray-100);
+    background: var(--fill);
     padding: 1px 5px;
     border-radius: 4px;
   }
@@ -76,7 +103,7 @@
   }
   hr.rule {
     border: none;
-    border-top: 1px solid var(--gray-300);
+    border-top: 1px solid var(--border);
     margin: 0 0 28px;
   }
 
@@ -89,7 +116,7 @@
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--gray-500);
+    color: var(--text-mute);
     margin-bottom: 12px;
   }
   .swatch-grid {
@@ -102,28 +129,28 @@
     width: 64px;
     height: 64px;
     border-radius: var(--radius-row);
-    border: var(--border);
+    border: var(--border-line);
     margin-bottom: 8px;
   }
   .swatch .chip.no-border { border-color: transparent; }
   .swatch .hex {
     font-family: var(--mono);
     font-size: 12px;
-    color: var(--gray-700);
+    color: var(--text-soft);
     display: block;
   }
   .swatch .token {
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--gray-500);
+    color: var(--text-mute);
     display: block;
   }
 
   /* ---------- Typography ---------- */
   .type-scale {
-    border: var(--border);
+    border: var(--border-line);
     border-radius: var(--radius-panel);
-    background: var(--white);
+    background: var(--surface);
     overflow: hidden;
   }
   .type-row {
@@ -132,7 +159,7 @@
     justify-content: space-between;
     gap: 24px;
     padding: 20px 24px;
-    border-bottom: 1px solid var(--gray-100);
+    border-bottom: 1px solid var(--fill);
   }
   .type-row:last-child { border-bottom: none; }
   .type-specimen {
@@ -141,17 +168,17 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: var(--slate);
+    color: var(--text);
   }
   .type-meta {
     font-family: var(--mono);
     font-size: 12px;
-    color: var(--gray-500);
+    color: var(--text-mute);
     text-align: right;
     flex-shrink: 0;
   }
   .type-meta .name {
-    color: var(--gray-700);
+    color: var(--text-soft);
     display: block;
     margin-bottom: 2px;
   }
@@ -161,7 +188,7 @@
   .t-h2       { font-family: var(--serif); font-size: 24px; line-height: 1.3;  font-weight: 500; }
   .t-body     { font-family: var(--sans);  font-size: 16px; line-height: 1.55; font-weight: 430; }
   .t-small    { font-family: var(--sans);  font-size: 14px; line-height: 1.5;  font-weight: 430; }
-  .t-caption  { font-family: var(--sans);  font-size: 12px; line-height: 1.4;  font-weight: 500; color: var(--gray-500); }
+  .t-caption  { font-family: var(--sans);  font-size: 12px; line-height: 1.4;  font-weight: 500; color: var(--text-mute); }
 
   /* ---------- Spacing ---------- */
   .spacing-ruler {
@@ -169,8 +196,8 @@
     align-items: flex-end;
     gap: 28px;
     padding: 28px 24px;
-    background: var(--white);
-    border: var(--border);
+    background: var(--surface);
+    border: var(--border-line);
     border-radius: var(--radius-panel);
     overflow-x: auto;
   }
@@ -182,19 +209,19 @@
     flex-shrink: 0;
   }
   .space-bar {
-    background: var(--clay);
+    background: var(--accent);
     border-radius: 3px;
     height: 14px;
   }
   .space-label {
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--gray-700);
+    color: var(--text-soft);
     text-align: center;
   }
   .space-label span {
     display: block;
-    color: var(--gray-500);
+    color: var(--text-mute);
   }
 
   /* ---------- Radius & Elevation ---------- */
@@ -207,8 +234,8 @@
   .radius-card {
     width: 120px;
     height: 88px;
-    background: var(--oat);
-    border: var(--border);
+    background: var(--tint);
+    border: var(--border-line);
     display: flex;
     align-items: flex-end;
     padding: 10px 12px;
@@ -216,14 +243,14 @@
   .radius-card .lbl {
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--gray-700);
+    color: var(--text-soft);
   }
-  .radius-card .lbl span { color: var(--gray-500); display: block; }
+  .radius-card .lbl span { color: var(--text-mute); display: block; }
 
   .shadow-card {
     width: 160px;
     height: 96px;
-    background: var(--white);
+    background: var(--surface);
     border-radius: var(--radius-panel);
     display: flex;
     align-items: flex-end;
@@ -232,9 +259,9 @@
   .shadow-card .lbl {
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--gray-700);
+    color: var(--text-soft);
   }
-  .shadow-card .lbl span { color: var(--gray-500); display: block; }
+  .shadow-card .lbl span { color: var(--text-mute); display: block; }
 
   /* ---------- Core components ---------- */
   .component {
@@ -243,7 +270,7 @@
   .component-name {
     font-family: var(--mono);
     font-size: 12px;
-    color: var(--gray-500);
+    color: var(--text-mute);
     margin-bottom: 12px;
   }
   .component-stage {
@@ -252,8 +279,8 @@
     align-items: center;
     gap: 16px;
     padding: 24px;
-    background: var(--white);
-    border: var(--border);
+    background: var(--surface);
+    border: var(--border-line);
     border-radius: var(--radius-panel);
   }
 
@@ -272,13 +299,13 @@
     cursor: pointer;
     transition: background 0.12s ease, border-color 0.12s ease;
   }
-  .btn-primary   { background: var(--clay); color: var(--white); }
+  .btn-primary   { background: var(--accent); color: var(--surface); }
   .btn-primary:hover { background: #C7684C; }
-  .btn-secondary { background: var(--white); color: var(--slate); border-color: var(--gray-300); }
-  .btn-secondary:hover { background: var(--gray-100); }
-  .btn-ghost     { background: transparent; color: var(--gray-700); }
-  .btn-ghost:hover { background: var(--gray-100); }
-  .btn-danger    { background: #B04A4A; color: var(--white); }
+  .btn-secondary { background: var(--surface); color: var(--text); border-color: var(--border); }
+  .btn-secondary:hover { background: var(--fill); }
+  .btn-ghost     { background: transparent; color: var(--text-soft); }
+  .btn-ghost:hover { background: var(--fill); }
+  .btn-danger    { background: #B04A4A; color: var(--surface); }
   .btn-danger:hover { background: #9A3F3F; }
 
   /* Input */
@@ -287,17 +314,17 @@
     padding: 0 12px;
     font-family: var(--sans);
     font-size: 14px;
-    color: var(--slate);
-    background: var(--white);
-    border: var(--border);
+    color: var(--text);
+    background: var(--surface);
+    border: var(--border-line);
     border-radius: var(--radius-row);
     width: 260px;
     outline: none;
     transition: border-color 0.12s ease, box-shadow 0.12s ease;
   }
-  .input::placeholder { color: var(--gray-500); }
+  .input::placeholder { color: var(--text-mute); }
   .input:focus {
-    border-color: var(--clay);
+    border-color: var(--accent);
     box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.15);
   }
 
@@ -314,24 +341,24 @@
     appearance: none;
     width: 18px;
     height: 18px;
-    border: var(--border);
+    border: var(--border-line);
     border-radius: 5px;
-    background: var(--white);
+    background: var(--surface);
     margin: 0;
     cursor: pointer;
     position: relative;
     transition: background 0.12s ease, border-color 0.12s ease;
   }
   .checkbox input:checked {
-    background: var(--clay);
-    border-color: var(--clay);
+    background: var(--accent);
+    border-color: var(--accent);
   }
   .checkbox input:checked::after {
     content: "";
     position: absolute;
     left: 5px; top: 1px;
     width: 5px; height: 10px;
-    border: solid var(--white);
+    border: solid var(--surface);
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
   }
@@ -346,13 +373,53 @@
     font-weight: 500;
     border-radius: 999px;
   }
-  .badge-neutral { background: var(--gray-100); color: var(--gray-700); }
-  .badge-accent  { background: rgba(217, 119, 87, 0.14); color: var(--clay); }
+  .badge-neutral { background: var(--fill); color: var(--text-soft); }
+  .badge-accent  { background: rgba(217, 119, 87, 0.14); color: var(--accent); }
   .badge-success { background: rgba(120, 140, 93, 0.16); color: var(--olive); }
   .badge-warning { background: rgba(199, 142, 63, 0.16); color: #A06A2A; }
+/* ── semantic roles — dark ── */
+  [data-theme="dark"] {
+    --bg:        #1A1815;
+    --surface:   #211F1B;
+    --text:      #ECEAE3;
+    --text-soft: #C9C6BD;
+    --text-mute: #9C9A93;
+    --border:    #3A382F;
+    --fill:      #26241E;
+    --accent:    var(--clay-soft);
+    --accent-strong: #D97757;
+    --tint:      #2E2A22;
+    color-scheme: dark;
+  }
+
+  /* ── theme toggle (identical across the gallery) ── */
+  .theme-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 1000;
+    width: 38px; height: 38px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+  }
+  .theme-toggle:hover { border-color: var(--text); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .theme-toggle svg { width: 18px; height: 18px; }
+  .theme-toggle .sun  { display: none; }
+  .theme-toggle .moon { display: block; }
+  [data-theme="dark"] .theme-toggle .sun  { display: block; }
+  [data-theme="dark"] .theme-toggle .moon { display: none; }
+  @media print { .theme-toggle { display: none; } }
 </style>
 </head>
 <body>
+<button class="theme-toggle" type="button" aria-label="Switch between light and dark theme" title="Switch theme">
+  <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.1 5.1l1.6 1.6M17.3 17.3l1.6 1.6M18.9 5.1l-1.6 1.6M6.7 17.3l-1.6 1.6"/></svg>
+  <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.6A8.2 8.2 0 1 1 9.4 3.5a6.4 6.4 0 0 0 11.1 11.1z"/></svg>
+</button>
 <div class="page">
 
   <header>
@@ -625,5 +692,23 @@
   </section>
 
 </div>
+<script>
+/* Theme toggle: flip data-theme, persist the choice, and keep following the OS
+   until the user makes an explicit choice. */
+(function () {
+  var root = document.documentElement;
+  var btn = document.querySelector(".theme-toggle");
+  if (btn) btn.addEventListener("click", function () {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+  var mq = window.matchMedia && matchMedia("(prefers-color-scheme: dark)");
+  if (mq && mq.addEventListener) mq.addEventListener("change", function (e) {
+    try { if (localStorage.getItem("theme")) return; } catch (_) {}
+    root.setAttribute("data-theme", e.matches ? "dark" : "light");
+  });
+})();
+</script>
 </body>
 </html>

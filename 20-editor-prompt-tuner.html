@@ -4,8 +4,35 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Acme — Support reply prompt tuner</title>
+<script>
+/* Set the theme before first paint to avoid a flash. Stored choice wins;
+   otherwise follow the OS preference. localStorage may be blocked (e.g. file://) — fail soft. */
+(function () {
+  try {
+    var t = localStorage.getItem("theme");
+    if (t !== "dark" && t !== "light")
+      t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {
+    document.documentElement.setAttribute("data-theme", "light");
+  }
+})();
+</script>
 <style>
   :root {
+    /* ── semantic roles — light (default) ── */
+    --bg:        #FAF9F5;
+    --surface:   #FFFFFF;
+    --text:      #141413;
+    --text-soft: #3D3D3A;
+    --text-mute: #87867F;
+    --border:    #D1CFC5;
+    --fill:      #F0EEE6;
+    --accent:    #D97757;
+    --accent-strong: #B85C3E;
+    --clay-soft: #E08A6B;   /* clay lifted for legibility on dark surfaces */
+    --tint:      #E3DACC;   /* warm tinted / inset surface */
+    color-scheme: light;
     --ivory: #FAF9F5;
     --slate: #141413;
     --clay: #D97757;
@@ -24,8 +51,8 @@
   * { box-sizing: border-box; }
   html, body {
     margin: 0;
-    background: var(--ivory);
-    color: var(--slate);
+    background: var(--bg);
+    color: var(--text);
     font-family: var(--sans);
     font-size: 14px;
     line-height: 1.5;
@@ -43,7 +70,7 @@
     font-size: 11px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--gray-500);
+    color: var(--text-mute);
   }
   h1 {
     font-family: var(--serif);
@@ -53,7 +80,7 @@
     margin: 6px 0 4px;
   }
   .sub {
-    color: var(--gray-500);
+    color: var(--text-mute);
     max-width: 640px;
   }
 
@@ -65,16 +92,16 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    background: var(--ivory);
+    background: var(--bg);
     padding: 10px 0 14px;
     margin-bottom: 6px;
-    border-bottom: 1px solid var(--gray-200);
+    border-bottom: 1px solid var(--border);
   }
   .toolbar .spacer { flex: 1; }
   .toolbar .hint {
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--gray-500);
+    color: var(--text-mute);
     letter-spacing: 0.02em;
   }
   button {
@@ -85,25 +112,25 @@
     appearance: none;
   }
   .btn-primary {
-    background: var(--slate);
-    color: var(--ivory);
-    border: 1.5px solid var(--slate);
+    background: var(--text);
+    color: var(--bg);
+    border: 1.5px solid var(--text);
     border-radius: 999px;
     padding: 9px 16px;
     transition: background 140ms ease, transform 80ms ease;
   }
-  .btn-primary:hover { background: var(--gray-800); }
+  .btn-primary:hover { background: var(--text-soft); }
   .btn-primary:active { transform: translateY(1px); }
   .btn-primary.copied { background: var(--olive); border-color: var(--olive); }
   .btn-ghost {
     background: transparent;
-    color: var(--gray-800);
-    border: 1.5px solid var(--gray-200);
+    color: var(--text-soft);
+    border: 1.5px solid var(--border);
     border-radius: 999px;
     padding: 8px 15px;
     transition: border-color 140ms ease, color 140ms ease;
   }
-  .btn-ghost:hover { border-color: var(--gray-500); color: var(--slate); }
+  .btn-ghost:hover { border-color: var(--text-mute); color: var(--text); }
 
   /* ---------- two-column layout ---------- */
   .cols {
@@ -118,8 +145,8 @@
   }
 
   .panel {
-    background: var(--white);
-    border: 1.5px solid var(--gray-200);
+    background: var(--surface);
+    border: 1.5px solid var(--border);
     border-radius: 12px;
     overflow: hidden;
   }
@@ -130,23 +157,23 @@
     align-items: center;
     gap: 10px;
     padding: 11px 16px;
-    border-bottom: 1.5px solid var(--gray-200);
-    background: var(--gray-50);
+    border-bottom: 1.5px solid var(--border);
+    background: var(--fill);
   }
   .ed-label {
     font-family: var(--mono);
     font-size: 11px;
     letter-spacing: 0.1em;
-    color: var(--gray-500);
+    color: var(--text-mute);
     text-transform: uppercase;
   }
   .ed-toolbar .spacer { flex: 1; }
   .counter {
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--gray-800);
-    background: var(--white);
-    border: 1.5px solid var(--gray-200);
+    color: var(--text-soft);
+    background: var(--surface);
+    border: 1.5px solid var(--border);
     border-radius: 999px;
     padding: 3px 10px;
     white-space: nowrap;
@@ -160,46 +187,46 @@
     min-height: 360px;
     white-space: pre-wrap;
     word-break: break-word;
-    background: var(--white);
-    color: var(--slate);
+    background: var(--surface);
+    color: var(--text);
     outline: none;
-    caret-color: var(--clay);
+    caret-color: var(--accent);
     tab-size: 2;
   }
   .editor:focus-visible { outline: none; }
   .slot {
-    background: var(--oat);
-    color: var(--clay-d);
+    background: rgba(217, 119, 87, 0.16);   /* clay tint — adapts to either theme */
+    color: var(--accent-strong);
     border-radius: 4px;
     padding: 0 3px;
     font-weight: 600;
   }
   .slot.warn {
     background: rgba(217, 119, 87, 0.14);
-    color: var(--clay-d);
-    text-decoration: underline dashed var(--clay) 1.5px;
+    color: var(--accent-strong);
+    text-decoration: underline dashed var(--accent) 1.5px;
     text-underline-offset: 3px;
   }
 
   .legend {
-    border-top: 1.5px solid var(--gray-200);
+    border-top: 1.5px solid var(--border);
     padding: 12px 16px 14px;
-    background: var(--gray-50);
+    background: var(--fill);
   }
   .legend-label {
     font-family: var(--mono);
     font-size: 10px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--gray-500);
+    color: var(--text-mute);
     margin-bottom: 8px;
   }
   .legend-chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip {
     font-family: var(--mono);
     font-size: 11px;
-    background: var(--oat);
-    color: var(--clay-d);
+    background: rgba(217, 119, 87, 0.16);   /* clay tint — adapts to either theme */
+    color: var(--accent-strong);
     border-radius: 4px;
     padding: 2px 7px;
     font-weight: 600;
@@ -212,11 +239,11 @@
     font-size: 11px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--gray-500);
+    color: var(--text-mute);
     padding: 0 2px 2px;
   }
   .sample {
-    border: 1.5px solid var(--gray-200);
+    border: 1.5px solid var(--border);
     border-radius: 10px;
     overflow: hidden;
   }
@@ -225,14 +252,14 @@
     align-items: center;
     gap: 9px;
     padding: 9px 13px;
-    border-bottom: 1.5px solid var(--gray-200);
-    background: var(--gray-50);
+    border-bottom: 1.5px solid var(--border);
+    background: var(--fill);
   }
   .badge {
     font-family: var(--mono);
     font-size: 10px;
     letter-spacing: 0.08em;
-    color: var(--gray-500);
+    color: var(--text-mute);
   }
   .cust {
     font-family: var(--serif);
@@ -248,30 +275,30 @@
     text-transform: uppercase;
     border-radius: 999px;
     padding: 2px 8px;
-    border: 1.5px solid var(--gray-200);
-    color: var(--gray-800);
-    background: var(--white);
+    border: 1.5px solid var(--border);
+    color: var(--text-soft);
+    background: var(--surface);
   }
-  .plan.team   { background: var(--oat);   border-color: var(--oat);   color: var(--clay-d); }
-  .plan.studio { background: var(--olive); border-color: var(--olive); color: var(--ivory); }
+  .plan.team   { background: var(--tint);   border-color: var(--tint);   color: var(--accent-strong); }
+  .plan.studio { background: var(--olive); border-color: var(--olive); color: var(--bg); }
   .rendered {
     font-family: var(--mono);
     font-size: 12.5px;
     line-height: 1.6;
-    color: var(--gray-800);
+    color: var(--text-soft);
     white-space: pre-wrap;
     word-break: break-word;
     padding: 12px 13px 14px;
   }
   .filled {
-    background: var(--gray-50);
+    background: var(--fill);
     border-radius: 3px;
     padding: 0 2px;
-    box-shadow: inset 0 0 0 1px var(--gray-200);
+    box-shadow: inset 0 0 0 1px var(--border);
   }
   .missing {
     background: rgba(217, 119, 87, 0.12);
-    color: var(--clay-d);
+    color: var(--accent-strong);
     border-radius: 3px;
     padding: 0 2px;
     font-weight: 600;
@@ -281,12 +308,52 @@
     margin-top: 36px;
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--gray-500);
+    color: var(--text-mute);
     letter-spacing: 0.02em;
   }
+/* ── semantic roles — dark ── */
+  [data-theme="dark"] {
+    --bg:        #1A1815;
+    --surface:   #211F1B;
+    --text:      #ECEAE3;
+    --text-soft: #C9C6BD;
+    --text-mute: #9C9A93;
+    --border:    #3A382F;
+    --fill:      #26241E;
+    --accent:    var(--clay-soft);
+    --accent-strong: #D97757;
+    --tint:      #2E2A22;
+    color-scheme: dark;
+  }
+
+  /* ── theme toggle (identical across the gallery) ── */
+  .theme-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 1000;
+    width: 38px; height: 38px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+  }
+  .theme-toggle:hover { border-color: var(--text); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .theme-toggle svg { width: 18px; height: 18px; }
+  .theme-toggle .sun  { display: none; }
+  .theme-toggle .moon { display: block; }
+  [data-theme="dark"] .theme-toggle .sun  { display: block; }
+  [data-theme="dark"] .theme-toggle .moon { display: none; }
+  @media print { .theme-toggle { display: none; } }
 </style>
 </head>
 <body>
+<button class="theme-toggle" type="button" aria-label="Switch between light and dark theme" title="Switch theme">
+  <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.1 5.1l1.6 1.6M17.3 17.3l1.6 1.6M18.9 5.1l-1.6 1.6M6.7 17.3l-1.6 1.6"/></svg>
+  <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.6A8.2 8.2 0 1 1 9.4 3.5a6.4 6.4 0 0 0 11.1 11.1z"/></svg>
+</button>
 <div class="wrap">
 
   <header>
@@ -716,6 +783,24 @@
   buildLegend();
   buildSamples();
   refresh({ text: DEFAULT_TEMPLATE });
+})();
+</script>
+<script>
+/* Theme toggle: flip data-theme, persist the choice, and keep following the OS
+   until the user makes an explicit choice. */
+(function () {
+  var root = document.documentElement;
+  var btn = document.querySelector(".theme-toggle");
+  if (btn) btn.addEventListener("click", function () {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+  var mq = window.matchMedia && matchMedia("(prefers-color-scheme: dark)");
+  if (mq && mq.addEventListener) mq.addEventListener("change", function (e) {
+    try { if (localStorage.getItem("theme")) return; } catch (_) {}
+    root.setAttribute("data-theme", e.matches ? "dark" : "light");
+  });
 })();
 </script>
 </body>

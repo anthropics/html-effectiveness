@@ -4,8 +4,35 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Acme — Sidebar drag-to-reorder</title>
+<script>
+/* Set the theme before first paint to avoid a flash. Stored choice wins;
+   otherwise follow the OS preference. localStorage may be blocked (e.g. file://) — fail soft. */
+(function () {
+  try {
+    var t = localStorage.getItem("theme");
+    if (t !== "dark" && t !== "light")
+      t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {
+    document.documentElement.setAttribute("data-theme", "light");
+  }
+})();
+</script>
 <style>
   :root {
+    /* ── semantic roles — light (default) ── */
+    --bg:        #FAF9F5;
+    --surface:   #FFFFFF;
+    --text:      #141413;
+    --text-soft: #3D3D3A;
+    --text-mute: #87867F;
+    --border:    #D1CFC5;
+    --fill:      #F0EEE6;
+    --accent:    #D97757;
+    --accent-strong: #B85C3E;
+    --clay-soft: #E08A6B;   /* clay lifted for legibility on dark surfaces */
+    --tint:      #E3DACC;   /* warm tinted / inset surface */
+    color-scheme: light;
     --ivory: #FAF9F5;
     --slate: #141413;
     --clay: #D97757;
@@ -23,8 +50,8 @@
   * { box-sizing: border-box; }
   html, body {
     margin: 0;
-    background: var(--ivory);
-    color: var(--slate);
+    background: var(--bg);
+    color: var(--text);
     font-family: var(--sans);
     font-size: 14px;
     line-height: 1.55;
@@ -40,7 +67,7 @@
     font-size: 11px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--gray-500);
+    color: var(--text-mute);
   }
   h1 {
     font-family: var(--serif);
@@ -50,14 +77,14 @@
     margin: 6px 0 4px;
   }
   .sub {
-    color: var(--gray-500);
+    color: var(--text-mute);
     max-width: 600px;
   }
   code.inline {
     font-family: var(--mono);
     font-size: 12px;
-    background: var(--gray-50);
-    border: 1.5px solid var(--gray-200);
+    background: var(--fill);
+    border: 1.5px solid var(--border);
     padding: 1px 5px;
     border-radius: 4px;
   }
@@ -73,8 +100,8 @@
   /* ---------- sidebar mock ---------- */
   .sidebar {
     width: 260px;
-    background: var(--white);
-    border: 1.5px solid var(--gray-200);
+    background: var(--surface);
+    border: 1.5px solid var(--border);
     border-radius: 12px;
     padding: 14px 10px;
   }
@@ -83,7 +110,7 @@
     font-size: 10px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--gray-500);
+    color: var(--text-mute);
     padding: 4px 10px 10px;
   }
   .list {
@@ -99,25 +126,25 @@
     padding: 9px 10px;
     margin: 2px 0;
     border-radius: 8px;
-    background: var(--white);
+    background: var(--surface);
     cursor: grab;
     user-select: none;
     transition: background 120ms linear, transform 120ms ease-out, opacity 120ms linear;
   }
-  .item:hover { background: var(--gray-50); }
-  .item:hover .grip i { background: var(--gray-800); }
+  .item:hover { background: var(--fill); }
+  .item:hover .grip i { background: var(--text-soft); }
   .item.dragging {
     opacity: 0.35;
     transform: rotate(2deg);
-    background: var(--gray-50);
+    background: var(--fill);
     cursor: grabbing;
   }
-  .item .label { font-size: 14px; color: var(--slate); }
+  .item .label { font-size: 14px; color: var(--text); }
   .item .count {
     margin-left: auto;
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--gray-500);
+    color: var(--text-mute);
   }
 
   /* grip: 2 × 3 dot grid, pure css */
@@ -135,7 +162,7 @@
     width: 3px;
     height: 3px;
     border-radius: 50%;
-    background: var(--gray-200);
+    background: var(--border);
     transition: background 120ms linear;
   }
 
@@ -145,7 +172,7 @@
     left: 6px;
     right: 6px;
     height: 2px;
-    background: var(--clay);
+    background: var(--accent);
     border-radius: 2px;
     pointer-events: none;
     display: none;
@@ -158,14 +185,14 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--clay);
+    background: var(--accent);
   }
   .indicator.on { display: block; }
 
   /* ---------- annotation panel ---------- */
   .notes {
-    background: var(--white);
-    border: 1.5px solid var(--gray-200);
+    background: var(--surface);
+    border: 1.5px solid var(--border);
     border-radius: 12px;
     padding: 22px 24px;
   }
@@ -176,7 +203,7 @@
     margin: 0 0 6px;
   }
   .notes .lede {
-    color: var(--gray-500);
+    color: var(--text-mute);
     font-size: 13px;
     margin: 0 0 16px;
   }
@@ -188,9 +215,9 @@
   .notes li {
     position: relative;
     padding: 10px 0 10px 22px;
-    border-top: 1.5px solid var(--gray-50);
+    border-top: 1.5px solid var(--fill);
     font-size: 13px;
-    color: var(--gray-800);
+    color: var(--text-soft);
   }
   .notes li:first-child { border-top: none; }
   .notes li::before {
@@ -201,15 +228,15 @@
     width: 7px;
     height: 7px;
     border-radius: 2px;
-    background: var(--clay);
+    background: var(--accent);
   }
-  .notes li b { color: var(--slate); font-weight: 600; }
+  .notes li b { color: var(--text); font-weight: 600; }
 
   /* ---------- open questions ---------- */
   .questions {
     margin-top: 28px;
-    background: var(--oat);
-    border: 1.5px solid var(--gray-200);
+    background: var(--tint);
+    border: 1.5px solid var(--border);
     border-radius: 12px;
     padding: 20px 24px;
   }
@@ -225,7 +252,7 @@
   }
   .questions li {
     font-size: 13px;
-    color: var(--gray-800);
+    color: var(--text-soft);
     padding: 4px 0;
   }
   .questions li::marker {
@@ -238,11 +265,51 @@
     margin-top: 18px;
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--gray-500);
+    color: var(--text-mute);
   }
+/* ── semantic roles — dark ── */
+  [data-theme="dark"] {
+    --bg:        #1A1815;
+    --surface:   #211F1B;
+    --text:      #ECEAE3;
+    --text-soft: #C9C6BD;
+    --text-mute: #9C9A93;
+    --border:    #3A382F;
+    --fill:      #26241E;
+    --accent:    var(--clay-soft);
+    --accent-strong: #D97757;
+    --tint:      #2E2A22;
+    color-scheme: dark;
+  }
+
+  /* ── theme toggle (identical across the gallery) ── */
+  .theme-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 1000;
+    width: 38px; height: 38px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+  }
+  .theme-toggle:hover { border-color: var(--text); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .theme-toggle svg { width: 18px; height: 18px; }
+  .theme-toggle .sun  { display: none; }
+  .theme-toggle .moon { display: block; }
+  [data-theme="dark"] .theme-toggle .sun  { display: block; }
+  [data-theme="dark"] .theme-toggle .moon { display: none; }
+  @media print { .theme-toggle { display: none; } }
 </style>
 </head>
 <body>
+<button class="theme-toggle" type="button" aria-label="Switch between light and dark theme" title="Switch theme">
+  <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.1 5.1l1.6 1.6M17.3 17.3l1.6 1.6M18.9 5.1l-1.6 1.6M6.7 17.3l-1.6 1.6"/></svg>
+  <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.6A8.2 8.2 0 1 1 9.4 3.5a6.4 6.4 0 0 0 11.1 11.1z"/></svg>
+</button>
 <div class="wrap">
 
   <header>
@@ -391,6 +458,24 @@
     dropBefore = null;
     indicator.classList.remove('on');
   }
+</script>
+<script>
+/* Theme toggle: flip data-theme, persist the choice, and keep following the OS
+   until the user makes an explicit choice. */
+(function () {
+  var root = document.documentElement;
+  var btn = document.querySelector(".theme-toggle");
+  if (btn) btn.addEventListener("click", function () {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+  var mq = window.matchMedia && matchMedia("(prefers-color-scheme: dark)");
+  if (mq && mq.addEventListener) mq.addEventListener("change", function (e) {
+    try { if (localStorage.getItem("theme")) return; } catch (_) {}
+    root.setAttribute("data-theme", e.matches ? "dark" : "light");
+  });
+})();
 </script>
 </body>
 </html>

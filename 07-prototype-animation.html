@@ -4,8 +4,35 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Acme — Task completed micro-interaction</title>
+<script>
+/* Set the theme before first paint to avoid a flash. Stored choice wins;
+   otherwise follow the OS preference. localStorage may be blocked (e.g. file://) — fail soft. */
+(function () {
+  try {
+    var t = localStorage.getItem("theme");
+    if (t !== "dark" && t !== "light")
+      t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {
+    document.documentElement.setAttribute("data-theme", "light");
+  }
+})();
+</script>
 <style>
   :root {
+/* ── semantic roles — light (default) ── */
+    --bg:        #FAF9F5;
+    --surface:   #FFFFFF;
+    --text:      #141413;
+    --text-soft: #3D3D3A;
+    --text-mute: #87867F;
+    --border:    #D1CFC5;
+    --fill:      #F0EEE6;
+    --accent:    #D97757;
+    --accent-strong: #B85C3E;
+    --clay-soft: #E08A6B;   /* clay lifted for legibility on dark surfaces */
+    --tint:      #E3DACC;   /* warm tinted / inset surface */
+    color-scheme: light;
     --ivory: #FAF9F5;
     --slate: #141413;
     --clay: #D97757;
@@ -25,8 +52,8 @@
   * { box-sizing: border-box; }
   html, body {
     margin: 0;
-    background: var(--ivory);
-    color: var(--slate);
+    background: var(--bg);
+    color: var(--text);
     font-family: var(--sans);
     font-size: 14px;
     line-height: 1.5;
@@ -42,7 +69,7 @@
     font-size: 11px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--gray-500);
+    color: var(--text-mute);
   }
   h1 {
     font-family: var(--serif);
@@ -52,7 +79,7 @@
     margin: 6px 0 4px;
   }
   .sub {
-    color: var(--gray-500);
+    color: var(--text-mute);
     max-width: 560px;
   }
 
@@ -64,8 +91,8 @@
     align-items: start;
   }
   .stage {
-    background: var(--white);
-    border: 1.5px solid var(--gray-200);
+    background: var(--surface);
+    border: 1.5px solid var(--border);
     border-radius: 12px;
     height: 360px;
     display: flex;
@@ -81,7 +108,7 @@
     transform: translateX(-50%);
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--gray-500);
+    color: var(--text-mute);
   }
 
   /* ---------- the task row ---------- */
@@ -90,9 +117,9 @@
     align-items: center;
     gap: 14px;
     padding: 14px 18px;
-    border: 1.5px solid var(--gray-200);
+    border: 1.5px solid var(--border);
     border-radius: 8px;
-    background: var(--white);
+    background: var(--surface);
     width: 360px;
     max-height: 64px;
     position: relative;
@@ -103,15 +130,15 @@
     cursor: pointer;
     user-select: none;
   }
-  .task:hover { border-color: var(--gray-500); }
+  .task:hover { border-color: var(--text-mute); }
 
   .check {
     flex: none;
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    border: 1.5px solid var(--gray-500);
-    background: var(--white);
+    border: 1.5px solid var(--text-mute);
+    background: var(--surface);
     position: relative;
     transition: background 180ms var(--ease),
                 border-color 180ms var(--ease),
@@ -125,7 +152,7 @@
     height: 14px;
   }
   .check path {
-    stroke: var(--white);
+    stroke: var(--surface);
     stroke-width: 2.5;
     stroke-linecap: round;
     stroke-linejoin: round;
@@ -138,7 +165,7 @@
   .label {
     position: relative;
     font-size: 15px;
-    color: var(--slate);
+    color: var(--text);
     transition: color 200ms var(--ease) 120ms;
   }
   .label::after {
@@ -148,7 +175,7 @@
     top: 52%;
     height: 1.5px;
     width: 0;
-    background: var(--gray-500);
+    background: var(--text-mute);
     transition: width 240ms var(--ease) 120ms;
   }
 
@@ -156,9 +183,9 @@
     margin-left: auto;
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--gray-500);
-    background: var(--gray-50);
-    border: 1.5px solid var(--gray-200);
+    color: var(--text-mute);
+    background: var(--fill);
+    border: 1.5px solid var(--border);
     padding: 3px 8px;
     border-radius: 8px;
     transition: opacity 200ms var(--ease) 120ms;
@@ -175,12 +202,12 @@
     opacity: 0;
     pointer-events: none;
   }
-  .confetti.c1 { background: var(--clay);  }
+  .confetti.c1 { background: var(--accent);  }
   .confetti.c2 { background: var(--olive); }
   .confetti.c3 { background: var(--oat);   }
-  .confetti.c4 { background: var(--clay);  }
+  .confetti.c4 { background: var(--accent);  }
   .confetti.c5 { background: var(--olive); }
-  .confetti.c6 { background: var(--gray-800); }
+  .confetti.c6 { background: var(--text-soft); }
 
   /* ---------- done state ---------- */
   .task.done .check {
@@ -190,12 +217,12 @@
     animation: settle 380ms var(--ease) forwards;
   }
   @keyframes settle {
-    0%   { transform: scale(0.8); background: var(--clay); border-color: var(--clay); }
+    0%   { transform: scale(0.8); background: var(--accent); border-color: var(--accent); }
     55%  { transform: scale(1.18); }
     100% { transform: scale(1); background: var(--olive); border-color: var(--olive); }
   }
   .task.done .check path { stroke-dashoffset: 0; }
-  .task.done .label { color: var(--gray-500); }
+  .task.done .label { color: var(--text-mute); }
   .task.done .label::after { width: 100%; }
   .task.done .due { opacity: 0.35; }
   .task.done {
@@ -219,8 +246,8 @@
 
   /* ---------- easing panel ---------- */
   .panel {
-    background: var(--white);
-    border: 1.5px solid var(--gray-200);
+    background: var(--surface);
+    border: 1.5px solid var(--border);
     border-radius: 12px;
     padding: 18px;
   }
@@ -233,40 +260,40 @@
   .panel p {
     margin: 0 0 14px;
     font-size: 12px;
-    color: var(--gray-500);
+    color: var(--text-mute);
   }
   .ease-btn {
     display: block;
     width: 100%;
     text-align: left;
-    background: var(--gray-50);
-    border: 1.5px solid var(--gray-200);
+    background: var(--fill);
+    border: 1.5px solid var(--border);
     border-radius: 8px;
     padding: 10px 12px;
     margin-bottom: 8px;
     font-family: var(--sans);
     font-size: 13px;
-    color: var(--slate);
+    color: var(--text);
     cursor: pointer;
   }
-  .ease-btn:hover { border-color: var(--gray-500); }
+  .ease-btn:hover { border-color: var(--text-mute); }
   .ease-btn.active {
-    border-color: var(--clay);
-    background: #FBF1EC;
+    border-color: var(--accent);
+    background: rgba(217,119,87,0.14);
   }
   .ease-btn code {
     display: block;
     font-family: var(--mono);
     font-size: 10px;
-    color: var(--gray-500);
+    color: var(--text-mute);
     margin-top: 2px;
   }
 
   /* ---------- timeline ---------- */
   .timeline {
     margin-top: 28px;
-    background: var(--white);
-    border: 1.5px solid var(--gray-200);
+    background: var(--surface);
+    border: 1.5px solid var(--border);
     border-radius: 12px;
     padding: 22px 22px 30px;
   }
@@ -279,7 +306,7 @@
   .track {
     position: relative;
     height: 2px;
-    background: var(--gray-200);
+    background: var(--border);
     margin: 20px 8px 0;
   }
   .key {
@@ -288,9 +315,9 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: var(--clay);
-    border: 1.5px solid var(--white);
-    box-shadow: 0 0 0 1.5px var(--clay);
+    background: var(--accent);
+    border: 1.5px solid var(--surface);
+    box-shadow: 0 0 0 1.5px var(--accent);
     transform: translateX(-50%);
   }
   .key span {
@@ -301,7 +328,7 @@
     white-space: nowrap;
     font-family: var(--mono);
     font-size: 10px;
-    color: var(--gray-800);
+    color: var(--text-soft);
   }
   .key em {
     position: absolute;
@@ -311,7 +338,7 @@
     white-space: nowrap;
     font-style: normal;
     font-size: 11px;
-    color: var(--gray-500);
+    color: var(--text-mute);
   }
   .k1 { left: 0%;   }
   .k2 { left: 13%;  }
@@ -329,9 +356,11 @@
     font-size: 16px;
     margin: 0 0 10px;
   }
+  /* keep code blocks a dark terminal in both themes */
+  [data-theme="dark"] pre { background: #16140F; color: #E8E6DE; }
   pre {
-    background: var(--gray-800);
-    color: var(--gray-50);
+    background: var(--text-soft);
+    color: var(--fill);
     border-radius: 12px;
     padding: 18px 20px;
     font-family: var(--mono);
@@ -340,12 +369,52 @@
     overflow-x: auto;
     margin: 0;
   }
-  pre .c { color: var(--gray-500); }
-  pre .k { color: var(--clay); }
+  pre .c { color: var(--text-mute); }
+  pre .k { color: var(--accent); }
   pre .v { color: #B8C99D; }
+/* ── semantic roles — dark ── */
+  [data-theme="dark"] {
+    --bg:        #1A1815;
+    --surface:   #211F1B;
+    --text:      #ECEAE3;
+    --text-soft: #C9C6BD;
+    --text-mute: #9C9A93;
+    --border:    #3A382F;
+    --fill:      #26241E;
+    --accent:    var(--clay-soft);
+    --accent-strong: #D97757;
+    --tint:      #2E2A22;
+    color-scheme: dark;
+  }
+
+  /* ── theme toggle (identical across the gallery) ── */
+  .theme-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 1000;
+    width: 38px; height: 38px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+  }
+  .theme-toggle:hover { border-color: var(--text); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .theme-toggle svg { width: 18px; height: 18px; }
+  .theme-toggle .sun  { display: none; }
+  .theme-toggle .moon { display: block; }
+  [data-theme="dark"] .theme-toggle .sun  { display: block; }
+  [data-theme="dark"] .theme-toggle .moon { display: none; }
+  @media print { .theme-toggle { display: none; } }
 </style>
 </head>
 <body>
+<button class="theme-toggle" type="button" aria-label="Switch between light and dark theme" title="Switch theme">
+  <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.1 5.1l1.6 1.6M17.3 17.3l1.6 1.6M18.9 5.1l-1.6 1.6M6.7 17.3l-1.6 1.6"/></svg>
+  <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.6A8.2 8.2 0 1 1 9.4 3.5a6.4 6.4 0 0 0 11.1 11.1z"/></svg>
+</button>
 <div class="wrap">
 
   <header>
@@ -450,6 +519,24 @@
       root.style.setProperty('--ease', btn.dataset.ease);
     });
   });
+</script>
+<script>
+/* Theme toggle: flip data-theme, persist the choice, and keep following the OS
+   until the user makes an explicit choice. */
+(function () {
+  var root = document.documentElement;
+  var btn = document.querySelector(".theme-toggle");
+  if (btn) btn.addEventListener("click", function () {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+  var mq = window.matchMedia && matchMedia("(prefers-color-scheme: dark)");
+  if (mq && mq.addEventListener) mq.addEventListener("change", function (e) {
+    try { if (localStorage.getItem("theme")) return; } catch (_) {}
+    root.setAttribute("data-theme", e.matches ? "dark" : "light");
+  });
+})();
 </script>
 </body>
 </html>
