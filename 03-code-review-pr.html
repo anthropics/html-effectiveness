@@ -4,8 +4,36 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PR #247 — Review Summary</title>
+<script>
+/* Set the theme before first paint to avoid a flash. Stored choice wins;
+   otherwise follow the OS preference. localStorage may be blocked (e.g. file://) — fail soft. */
+(function () {
+  try {
+    var t = localStorage.getItem("theme");
+    if (t !== "dark" && t !== "light")
+      t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {
+    document.documentElement.setAttribute("data-theme", "light");
+  }
+})();
+</script>
 <style>
   :root {
+/* ── semantic roles — light (default) ── */
+    --bg:        #FAF9F5;
+    --surface:   #FFFFFF;
+    --text:      #141413;
+    --text-soft: #3D3D3A;
+    --text-mute: #87867F;
+    --border:    #D1CFC5;
+    --fill:      #F0EEE6;
+    --accent:    #D97757;
+    --accent-strong: #B85C3E;
+    --clay-soft: #E08A6B;   /* clay lifted for legibility on dark surfaces */
+    --tint:      #E3DACC;   /* warm tinted / inset surface */
+    --warn-fg:   #8A6D2E;   /* "medium" risk amber */
+    color-scheme: light;
     --ivory: #FAF9F5;
     --slate: #141413;
     --clay: #D97757;
@@ -26,8 +54,8 @@
   html { scroll-behavior: smooth; }
 
   body {
-    background: var(--ivory);
-    color: var(--gray-700);
+    background: var(--bg);
+    color: var(--text-soft);
     font-family: var(--sans);
     font-size: 15px;
     line-height: 1.6;
@@ -41,17 +69,17 @@
 
   /* ---------- Header ---------- */
   header.pr-head {
-    border: 1.5px solid var(--gray-300);
+    border: 1.5px solid var(--border);
     border-radius: 12px;
     padding: 28px 32px;
-    background: #fff;
+    background: var(--surface);
     margin-bottom: 36px;
   }
 
   .repo-line {
     font-family: var(--mono);
     font-size: 12.5px;
-    color: var(--gray-500);
+    color: var(--text-mute);
     letter-spacing: 0.01em;
     margin-bottom: 10px;
   }
@@ -61,7 +89,7 @@
     font-weight: 500;
     font-size: 30px;
     line-height: 1.25;
-    color: var(--slate);
+    color: var(--text);
     margin-bottom: 18px;
   }
 
@@ -82,30 +110,30 @@
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: var(--oat);
-    color: var(--slate);
+    background: var(--tint);
+    color: var(--text);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 600;
     font-size: 13px;
     letter-spacing: 0.02em;
-    border: 1.5px solid var(--gray-300);
+    border: 1.5px solid var(--border);
   }
 
-  .author-name { font-weight: 500; color: var(--slate); }
-  .author-sub { font-size: 12px; color: var(--gray-500); }
+  .author-name { font-weight: 500; color: var(--text); }
+  .author-sub { font-size: 12px; color: var(--text-mute); }
 
   .branch {
     font-family: var(--mono);
     font-size: 12.5px;
-    color: var(--gray-700);
-    background: var(--gray-150);
-    border: 1.5px solid var(--gray-300);
+    color: var(--text-soft);
+    background: var(--fill);
+    border: 1.5px solid var(--border);
     border-radius: 8px;
     padding: 6px 10px;
   }
-  .branch .arrow { color: var(--gray-500); margin: 0 6px; }
+  .branch .arrow { color: var(--text-mute); margin: 0 6px; }
 
   .stat {
     font-family: var(--mono);
@@ -113,7 +141,7 @@
   }
   .stat .add { color: var(--olive); font-weight: 600; }
   .stat .del { color: var(--rust); font-weight: 600; }
-  .stat .files { color: var(--gray-500); margin-left: 10px; }
+  .stat .files { color: var(--text-mute); margin-left: 10px; }
 
   /* ---------- Section blocks ---------- */
   section { margin-bottom: 40px; }
@@ -122,7 +150,7 @@
     font-family: var(--serif);
     font-weight: 500;
     font-size: 21px;
-    color: var(--slate);
+    color: var(--text);
     margin-bottom: 14px;
   }
 
@@ -142,7 +170,7 @@
     top: 9px;
     width: 6px;
     height: 6px;
-    background: var(--gray-500);
+    background: var(--text-mute);
     border-radius: 2px;
   }
 
@@ -159,12 +187,12 @@
     gap: 8px;
     padding: 8px 12px;
     border-radius: 8px;
-    border: 1.5px solid var(--gray-300);
+    border: 1.5px solid var(--border);
     font-family: var(--mono);
     font-size: 12.5px;
-    color: var(--slate);
+    color: var(--text);
     text-decoration: none;
-    background: #fff;
+    background: var(--surface);
     transition: transform 0.12s ease;
   }
   .chip:hover { transform: translateY(-1px); }
@@ -177,15 +205,15 @@
   }
   .chip.safe { background: rgba(120,140,93,0.10); border-color: rgba(120,140,93,0.45); }
   .chip.safe .dot { background: var(--olive); }
-  .chip.medium { background: var(--oat); }
+  .chip.medium { background: rgba(184,155,110,0.16); border-color: rgba(184,155,110,0.5); }
   .chip.medium .dot { background: #B89B6E; }
   .chip.attention { background: rgba(217,119,87,0.12); border-color: rgba(217,119,87,0.55); }
-  .chip.attention .dot { background: var(--clay); }
+  .chip.attention .dot { background: var(--accent); }
 
   .legend {
     margin-top: 12px;
     font-size: 12px;
-    color: var(--gray-500);
+    color: var(--text-mute);
     display: flex;
     gap: 18px;
   }
@@ -194,9 +222,9 @@
 
   /* ---------- File sections ---------- */
   .file-card {
-    border: 1.5px solid var(--gray-300);
+    border: 1.5px solid var(--border);
     border-radius: 12px;
-    background: #fff;
+    background: var(--surface);
     margin-bottom: 24px;
     overflow: hidden;
     scroll-margin-top: 20px;
@@ -204,7 +232,7 @@
 
   .file-head {
     padding: 16px 20px;
-    border-bottom: 1.5px solid var(--gray-150);
+    border-bottom: 1.5px solid var(--fill);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -213,12 +241,12 @@
   .file-path {
     font-family: var(--mono);
     font-size: 13.5px;
-    color: var(--slate);
+    color: var(--text);
   }
   .file-delta {
     font-family: var(--mono);
     font-size: 12px;
-    color: var(--gray-500);
+    color: var(--text-mute);
   }
   .file-delta .add { color: var(--olive); }
   .file-delta .del { color: var(--rust); }
@@ -232,12 +260,15 @@
     font-weight: 600;
   }
   .risk-tag.safe { background: rgba(120,140,93,0.15); color: var(--olive); }
-  .risk-tag.medium { background: var(--oat); color: #7A6A4F; }
-  .risk-tag.attention { background: rgba(217,119,87,0.15); color: var(--clay); }
+  .risk-tag.medium { background: rgba(184,155,110,0.20); color: var(--warn-fg); }
+  .risk-tag.attention { background: rgba(217,119,87,0.15); color: var(--accent); }
 
   /* ---------- Diff block ---------- */
+  /* keep the diff a dark surface in both themes (the rgba add/del line
+     tints already adapt; only the container was inverted) */
+  [data-theme="dark"] .diff { background: #16140F; }
   .diff {
-    background: var(--slate);
+    background: var(--text);
     font-family: var(--mono);
     font-size: 12.5px;
     line-height: 1.7;
@@ -253,12 +284,12 @@
   .diff-row .ln {
     text-align: right;
     padding-right: 14px;
-    color: var(--gray-500);
+    color: var(--text-mute);
     user-select: none;
   }
   .diff-row .mark {
     text-align: center;
-    color: var(--gray-500);
+    color: var(--text-mute);
   }
   .diff-row .code { color: #E8E6DC; }
   .diff-row.ctx .code { color: #B8B6AC; }
@@ -268,9 +299,9 @@
   .diff-row.del .mark { color: var(--rust); }
   .diff-row.hunk {
     background: rgba(255,255,255,0.04);
-    color: var(--gray-500);
+    color: var(--text-mute);
   }
-  .diff-row.hunk .code { color: var(--gray-500); }
+  .diff-row.hunk .code { color: var(--text-mute); }
 
   /* ---------- Review comments ---------- */
   .comments {
@@ -278,20 +309,20 @@
     display: flex;
     flex-direction: column;
     gap: 14px;
-    background: var(--gray-150);
+    background: var(--fill);
   }
 
   .bubble {
     position: relative;
-    background: #fff;
-    border: 1.5px solid var(--gray-300);
+    background: var(--surface);
+    border: 1.5px solid var(--border);
     border-left-width: 4px;
     border-radius: 8px;
     padding: 12px 14px 12px 16px;
     max-width: 680px;
   }
-  .bubble.blocking { border-left-color: var(--clay); }
-  .bubble.nit { border-left-color: var(--gray-300); }
+  .bubble.blocking { border-left-color: var(--accent); }
+  .bubble.nit { border-left-color: var(--border); }
 
   .bubble::before {
     content: "";
@@ -300,17 +331,17 @@
     top: 16px;
     width: 12px;
     height: 12px;
-    background: #fff;
-    border-left: 1.5px solid var(--gray-300);
-    border-bottom: 1.5px solid var(--gray-300);
+    background: var(--surface);
+    border-left: 1.5px solid var(--border);
+    border-bottom: 1.5px solid var(--border);
     transform: rotate(45deg);
   }
-  .bubble.blocking::before { border-left-color: var(--clay); border-bottom-color: var(--clay); }
+  .bubble.blocking::before { border-left-color: var(--accent); border-bottom-color: var(--accent); }
 
   .bubble .anchor {
     font-family: var(--mono);
     font-size: 11.5px;
-    color: var(--gray-500);
+    color: var(--text-mute);
     margin-bottom: 4px;
   }
   .bubble .label {
@@ -321,22 +352,22 @@
     font-weight: 700;
     margin-right: 8px;
   }
-  .bubble.blocking .label { color: var(--clay); }
-  .bubble.nit .label { color: var(--gray-500); }
-  .bubble p { font-size: 13.5px; color: var(--gray-700); }
+  .bubble.blocking .label { color: var(--accent); }
+  .bubble.nit .label { color: var(--text-mute); }
+  .bubble p { font-size: 13.5px; color: var(--text-soft); }
   .bubble code {
     font-family: var(--mono);
     font-size: 12.5px;
-    background: var(--gray-150);
+    background: var(--fill);
     padding: 1px 5px;
     border-radius: 4px;
   }
 
   /* ---------- Collapsed files ---------- */
   details.file-collapsed {
-    border: 1.5px solid var(--gray-300);
+    border: 1.5px solid var(--border);
     border-radius: 12px;
-    background: #fff;
+    background: var(--surface);
     margin-bottom: 14px;
     scroll-margin-top: 20px;
   }
@@ -353,21 +384,21 @@
   details.file-collapsed summary::after {
     content: "+";
     font-family: var(--mono);
-    color: var(--gray-500);
+    color: var(--text-mute);
     font-size: 16px;
   }
   details.file-collapsed[open] summary::after { content: "−"; }
   details.file-collapsed .body {
     padding: 0 20px 16px;
     font-size: 13.5px;
-    color: var(--gray-700);
+    color: var(--text-soft);
   }
 
   /* ---------- Footer ---------- */
   footer.next-steps {
-    border: 1.5px solid var(--gray-300);
+    border: 1.5px solid var(--border);
     border-radius: 12px;
-    background: #fff;
+    background: var(--surface);
     padding: 24px 28px;
   }
   .checklist { list-style: none; padding: 0; }
@@ -388,13 +419,54 @@
   .checklist code {
     font-family: var(--mono);
     font-size: 12.5px;
-    background: var(--gray-150);
+    background: var(--fill);
     padding: 1px 5px;
     border-radius: 4px;
   }
+/* ── semantic roles — dark ── */
+  [data-theme="dark"] {
+    --bg:        #1A1815;
+    --surface:   #211F1B;
+    --text:      #ECEAE3;
+    --text-soft: #C9C6BD;
+    --text-mute: #9C9A93;
+    --border:    #3A382F;
+    --fill:      #26241E;
+    --accent:    var(--clay-soft);
+    --accent-strong: #D97757;
+    --tint:      #2E2A22;
+    --warn-fg:   #D9B36A;
+    color-scheme: dark;
+  }
+
+  /* ── theme toggle (identical across the gallery) ── */
+  .theme-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 1000;
+    width: 38px; height: 38px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+  }
+  .theme-toggle:hover { border-color: var(--text); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .theme-toggle svg { width: 18px; height: 18px; }
+  .theme-toggle .sun  { display: none; }
+  .theme-toggle .moon { display: block; }
+  [data-theme="dark"] .theme-toggle .sun  { display: block; }
+  [data-theme="dark"] .theme-toggle .moon { display: none; }
+  @media print { .theme-toggle { display: none; } }
 </style>
 </head>
 <body>
+<button class="theme-toggle" type="button" aria-label="Switch between light and dark theme" title="Switch theme">
+  <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.1 5.1l1.6 1.6M17.3 17.3l1.6 1.6M18.9 5.1l-1.6 1.6M6.7 17.3l-1.6 1.6"/></svg>
+  <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.6A8.2 8.2 0 1 1 9.4 3.5a6.4 6.4 0 0 0 11.1 11.1z"/></svg>
+</button>
 <div class="page">
 
   <header class="pr-head">
@@ -421,8 +493,8 @@
   <section class="prose">
     <h2>What this PR does</h2>
     <ul>
-      <li>Replaces the await-then-refetch pattern in <code style="font-family:var(--mono);font-size:12.5px;background:var(--gray-150);padding:1px 5px;border-radius:4px">TaskList</code> with optimistic cache writes, so toggling or reordering a task feels instant instead of waiting ~300ms for the round-trip.</li>
-      <li>Introduces a small <code style="font-family:var(--mono);font-size:12.5px;background:var(--gray-150);padding:1px 5px;border-radius:4px">useOptimisticTasks</code> hook that wraps the mutation, snapshots the previous list, and rolls back on error.</li>
+      <li>Replaces the await-then-refetch pattern in <code style="font-family:var(--mono);font-size:12.5px;background:var(--fill);padding:1px 5px;border-radius:4px">TaskList</code> with optimistic cache writes, so toggling or reordering a task feels instant instead of waiting ~300ms for the round-trip.</li>
+      <li>Introduces a small <code style="font-family:var(--mono);font-size:12.5px;background:var(--fill);padding:1px 5px;border-radius:4px">useOptimisticTasks</code> hook that wraps the mutation, snapshots the previous list, and rolls back on error.</li>
       <li>Extends the API client to accept an idempotency key per mutation and adds a toast when a rollback fires.</li>
     </ul>
   </section>
@@ -440,7 +512,7 @@
     <div class="legend">
       <span><span class="dot" style="background:var(--olive)"></span> safe</span>
       <span><span class="dot" style="background:#B89B6E"></span> worth a look</span>
-      <span><span class="dot" style="background:var(--clay)"></span> needs attention</span>
+      <span><span class="dot" style="background:var(--accent)"></span> needs attention</span>
     </div>
   </section>
 
@@ -633,6 +705,24 @@
       setTimeout(function () { target.style.boxShadow = 'none'; }, 1400);
     });
   });
+</script>
+<script>
+/* Theme toggle: flip data-theme, persist the choice, and keep following the OS
+   until the user makes an explicit choice. */
+(function () {
+  var root = document.documentElement;
+  var btn = document.querySelector(".theme-toggle");
+  if (btn) btn.addEventListener("click", function () {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+  var mq = window.matchMedia && matchMedia("(prefers-color-scheme: dark)");
+  if (mq && mq.addEventListener) mq.addEventListener("change", function (e) {
+    try { if (localStorage.getItem("theme")) return; } catch (_) {}
+    root.setAttribute("data-theme", e.matches ? "dark" : "light");
+  });
+})();
 </script>
 </body>
 </html>

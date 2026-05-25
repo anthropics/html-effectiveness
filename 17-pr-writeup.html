@@ -4,8 +4,37 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PR #312 — Move notification delivery onto a queue</title>
+<script>
+/* Set the theme before first paint to avoid a flash. Stored choice wins;
+   otherwise follow the OS preference. localStorage may be blocked (e.g. file://) — fail soft. */
+(function () {
+  try {
+    var t = localStorage.getItem("theme");
+    if (t !== "dark" && t !== "light")
+      t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {
+    document.documentElement.setAttribute("data-theme", "light");
+  }
+})();
+</script>
   <style>
     :root {
+    /* ── semantic roles — light (default) ── */
+    --bg:        #FAF9F5;
+    --surface:   #FFFFFF;
+    --text:      #141413;
+    --text-soft: #3D3D3A;
+    --text-mute: #87867F;
+    --border:    #D1CFC5;
+    --fill:      #F0EEE6;
+    --accent:    #D97757;
+    --accent-strong: #B85C3E;
+    --clay-soft: #E08A6B;   /* clay lifted for legibility on dark surfaces */
+    --tint:      #E3DACC;   /* warm tinted / inset surface */
+    --add-fg: #4B5C39; --add-bg: #E4E9DC;   /* diff / status: added  */
+    --del-fg: #8A3B1E; --del-bg: #F3D9CC;   /* diff / status: removed */
+    color-scheme: light;
       --ivory:    #FAF9F5;
       --slate:    #141413;
       --clay:     #D97757;
@@ -26,8 +55,8 @@
 
     body {
       font-family: var(--sans);
-      background: var(--ivory);
-      color: var(--gray-700);
+      background: var(--bg);
+      color: var(--text-soft);
       line-height: 1.55;
       padding: 56px 32px 120px;
       -webkit-font-smoothing: antialiased;
@@ -42,7 +71,7 @@
       font-size: 12px;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: var(--gray-500);
+      color: var(--text-mute);
       margin-bottom: 12px;
     }
     h1 {
@@ -50,7 +79,7 @@
       font-weight: 500;
       font-size: 36px;
       line-height: 1.15;
-      color: var(--slate);
+      color: var(--text);
       margin-bottom: 10px;
       letter-spacing: -0.01em;
     }
@@ -60,27 +89,27 @@
       gap: 18px;
       font-family: var(--mono);
       font-size: 12.5px;
-      color: var(--gray-500);
+      color: var(--text-mute);
       margin-bottom: 18px;
     }
-    .pr-meta .stat strong { color: var(--slate); font-weight: 600; }
+    .pr-meta .stat strong { color: var(--text); font-weight: 600; }
     .pr-meta .add { color: var(--olive); }
-    .pr-meta .del { color: var(--clay); }
+    .pr-meta .del { color: var(--accent); }
 
     .prompt-box {
-      background: var(--gray-150);
-      border: 1.5px solid var(--gray-300);
+      background: var(--fill);
+      border: 1.5px solid var(--border);
       border-radius: 12px;
       padding: 16px 20px;
       font-size: 14.5px;
-      color: var(--gray-700);
+      color: var(--text-soft);
     }
     .prompt-box .label {
       font-family: var(--mono);
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: var(--gray-500);
+      color: var(--text-mute);
       display: block;
       margin-bottom: 6px;
     }
@@ -100,7 +129,7 @@
       font-family: var(--serif);
       font-weight: 500;
       font-size: 25px;
-      color: var(--slate);
+      color: var(--text);
       margin-bottom: 14px;
       letter-spacing: -0.01em;
     }
@@ -110,7 +139,7 @@
     .toc {
       position: sticky;
       top: 32px;
-      border-left: 1.5px solid var(--gray-300);
+      border-left: 1.5px solid var(--border);
       padding-left: 18px;
       font-size: 13px;
     }
@@ -119,19 +148,19 @@
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: var(--gray-500);
+      color: var(--text-mute);
       margin-bottom: 10px;
     }
-    .toc a { display: block; color: var(--gray-700); text-decoration: none; padding: 4px 0; }
-    .toc a:hover { color: var(--clay); }
-    .toc .sub { padding-left: 12px; color: var(--gray-500); font-size: 12.5px; }
+    .toc a { display: block; color: var(--text-soft); text-decoration: none; padding: 4px 0; }
+    .toc a:hover { color: var(--accent); }
+    .toc .sub { padding-left: 12px; color: var(--text-mute); font-size: 12.5px; }
 
     /* ---------- TL;DR ---------- */
 
     .tldr {
-      background: var(--white);
-      border: 1.5px solid var(--gray-300);
-      border-left: 4px solid var(--clay);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-left: 4px solid var(--accent);
       border-radius: 12px;
       padding: 20px 24px;
       margin-bottom: 48px;
@@ -142,10 +171,10 @@
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: var(--gray-500);
+      color: var(--text-mute);
       margin-bottom: 8px;
     }
-    .tldr p { font-size: 15px; color: var(--slate); }
+    .tldr p { font-size: 15px; color: var(--text); }
 
     /* ---------- before/after ---------- */
 
@@ -157,8 +186,8 @@
     }
     @media (max-width: 720px) { .ba { grid-template-columns: 1fr; } }
     .ba .panel {
-      background: var(--white);
-      border: 1.5px solid var(--gray-300);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
       border-radius: 12px;
       padding: 18px 20px;
     }
@@ -168,20 +197,20 @@
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: var(--gray-500);
+      color: var(--text-mute);
       margin-bottom: 10px;
     }
     .ba .after .k { color: var(--olive); }
     .ba ul { list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; }
-    .ba li::before { content: '·'; color: var(--gray-500); margin-right: 8px; }
+    .ba li::before { content: '·'; color: var(--text-mute); margin-right: 8px; }
     .ba .after li::before { color: var(--olive); }
 
     /* ---------- file tour ---------- */
 
     .file-tour { display: flex; flex-direction: column; gap: 22px; }
     .file {
-      background: var(--white);
-      border: 1.5px solid var(--gray-300);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
       border-radius: 12px;
       overflow: hidden;
     }
@@ -192,16 +221,16 @@
       align-items: center;
       gap: 12px;
       list-style: none;
-      background: var(--gray-150);
-      border-bottom: 1.5px solid var(--gray-300);
+      background: var(--fill);
+      border-bottom: 1.5px solid var(--border);
     }
-    .file[open] summary { border-bottom-color: var(--gray-300); }
+    .file[open] summary { border-bottom-color: var(--border); }
     .file:not([open]) summary { border-bottom: none; }
     .file summary::-webkit-details-marker { display: none; }
     .file summary .chev {
       width: 8px; height: 8px;
-      border-right: 2px solid var(--gray-500);
-      border-bottom: 2px solid var(--gray-500);
+      border-right: 2px solid var(--text-mute);
+      border-bottom: 2px solid var(--text-mute);
       transform: rotate(-45deg);
       transition: transform .15s ease;
       flex-shrink: 0;
@@ -210,7 +239,7 @@
     .file summary .path {
       font-family: var(--mono);
       font-size: 13px;
-      color: var(--slate);
+      color: var(--text);
       flex: 1;
     }
     .file summary .badge {
@@ -222,28 +251,31 @@
       border-radius: 6px;
       font-weight: 600;
     }
-    .badge.new { background: #E4E9DC; color: #4B5C39; }
-    .badge.mod { background: var(--oat); color: var(--slate); }
-    .badge.del { background: #F3D9CC; color: #8A3B1E; }
+    .badge.new { background: var(--add-bg); color: var(--add-fg); }
+    .badge.mod { background: var(--tint); color: var(--text); }
+    .badge.del { background: var(--del-bg); color: var(--del-fg); }
     .file summary .stat { font-family: var(--mono); font-size: 12px; }
     .file summary .stat .add { color: var(--olive); }
-    .file summary .stat .del { color: var(--clay); }
+    .file summary .stat .del { color: var(--accent); }
     .file .file-body { padding: 18px 20px 22px; }
     .file .why {
       font-size: 14.5px;
       margin-bottom: 14px;
       max-width: 680px;
     }
-    .file .why strong { color: var(--slate); }
+    .file .why strong { color: var(--text); }
 
     /* ---------- code ---------- */
 
     .code {
-      background: var(--slate);
+      background: var(--text);
       border-radius: 10px;
       padding: 16px 18px;
       overflow-x: auto;
     }
+    /* keep the code block a dark surface in both themes (the inverted
+       background:var(--text) above would otherwise flip it light) */
+    [data-theme="dark"] .code { background: #16140F; }
     .code pre {
       font-family: var(--mono);
       font-size: 12.5px;
@@ -251,9 +283,9 @@
       color: #E8E6DE;
       white-space: pre;
     }
-    .code .kw  { color: var(--clay); }
+    .code .kw  { color: var(--accent); }
     .code .str { color: var(--olive); }
-    .code .cm  { color: var(--gray-500); }
+    .code .cm  { color: var(--text-mute); }
     .code .fn  { color: #C9B98A; }
     .code .add { background: rgba(120,140,93,.22); display: inline-block; width: 100%; }
     .code .del { background: rgba(217,119,87,.18); display: inline-block; width: 100%; text-decoration: line-through; text-decoration-color: rgba(217,119,87,.6); }
@@ -262,8 +294,8 @@
 
     .focus { display: flex; flex-direction: column; gap: 14px; max-width: 760px; }
     .focus .item {
-      background: var(--white);
-      border: 1.5px solid var(--gray-300);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
       border-radius: 10px;
       padding: 16px 20px;
       display: flex;
@@ -273,16 +305,16 @@
       font-family: var(--mono);
       font-size: 13px;
       font-weight: 600;
-      color: var(--white);
-      background: var(--clay);
+      color: var(--surface);
+      background: var(--accent);
       width: 26px; height: 26px;
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
       margin-top: 2px;
     }
-    .focus .t { font-weight: 600; color: var(--slate); font-size: 15px; margin-bottom: 2px; }
-    .focus .d { font-size: 13.5px; color: var(--gray-500); }
+    .focus .t { font-weight: 600; color: var(--text); font-size: 15px; margin-bottom: 2px; }
+    .focus .d { font-size: 13.5px; color: var(--text-mute); }
     .focus .d code { font-size: 12.5px; }
 
     /* ---------- test plan ---------- */
@@ -292,8 +324,8 @@
       display: flex;
       align-items: flex-start;
       gap: 12px;
-      background: var(--white);
-      border: 1.5px solid var(--gray-300);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
       border-radius: 10px;
       padding: 13px 18px;
       font-size: 14px;
@@ -303,7 +335,7 @@
       border-radius: 5px;
       flex-shrink: 0;
       margin-top: 2px;
-      border: 1.5px solid var(--gray-300);
+      border: 1.5px solid var(--border);
     }
     .test.done .check {
       background: var(--olive);
@@ -315,12 +347,12 @@
       position: absolute;
       left: 5px; top: 2px;
       width: 5px; height: 9px;
-      border-right: 2px solid var(--white);
-      border-bottom: 2px solid var(--white);
+      border-right: 2px solid var(--surface);
+      border-bottom: 2px solid var(--surface);
       transform: rotate(40deg);
     }
-    .test .label { color: var(--slate); }
-    .test .note { color: var(--gray-500); font-size: 13px; margin-top: 2px; }
+    .test .label { color: var(--text); }
+    .test .note { color: var(--text-mute); font-size: 13px; margin-top: 2px; }
 
     /* ---------- rollout ---------- */
 
@@ -328,8 +360,8 @@
     @media (max-width: 720px) { .rollout { flex-direction: column; } }
     .rollout .step {
       flex: 1;
-      background: var(--white);
-      border: 1.5px solid var(--gray-300);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
       padding: 16px 18px;
       position: relative;
     }
@@ -338,20 +370,62 @@
     .rollout .step + .step { border-left: none; }
     @media (max-width: 720px) {
       .rollout .step, .rollout .step:first-child, .rollout .step:last-child { border-radius: 12px; }
-      .rollout .step + .step { border-left: 1.5px solid var(--gray-300); margin-top: 10px; }
+      .rollout .step + .step { border-left: 1.5px solid var(--border); margin-top: 10px; }
     }
     .rollout .step .pct {
       font-family: var(--mono);
       font-size: 22px;
       font-weight: 600;
-      color: var(--clay);
+      color: var(--accent);
       margin-bottom: 6px;
     }
-    .rollout .step .d { font-size: 13px; color: var(--gray-500); }
-    .rollout .step .when { font-family: var(--mono); font-size: 11px; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
-  </style>
+    .rollout .step .d { font-size: 13px; color: var(--text-mute); }
+    .rollout .step .when { font-family: var(--mono); font-size: 11px; color: var(--text-mute); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  /* ── semantic roles — dark ── */
+  [data-theme="dark"] {
+    --bg:        #1A1815;
+    --surface:   #211F1B;
+    --text:      #ECEAE3;
+    --text-soft: #C9C6BD;
+    --text-mute: #9C9A93;
+    --border:    #3A382F;
+    --fill:      #26241E;
+    --accent:    var(--clay-soft);
+    --accent-strong: #D97757;
+    --tint:      #2E2A22;
+    --add-fg: #A7C08A; --add-bg: #222C1B;
+    --del-fg: #E5A08C; --del-bg: #33231C;
+    color-scheme: dark;
+  }
+
+  /* ── theme toggle (identical across the gallery) ── */
+  .theme-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 1000;
+    width: 38px; height: 38px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+  }
+  .theme-toggle:hover { border-color: var(--text); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .theme-toggle svg { width: 18px; height: 18px; }
+  .theme-toggle .sun  { display: none; }
+  .theme-toggle .moon { display: block; }
+  [data-theme="dark"] .theme-toggle .sun  { display: block; }
+  [data-theme="dark"] .theme-toggle .moon { display: none; }
+  @media print { .theme-toggle { display: none; } }
+</style>
 </head>
 <body>
+<button class="theme-toggle" type="button" aria-label="Switch between light and dark theme" title="Switch theme">
+  <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.1 5.1l1.6 1.6M17.3 17.3l1.6 1.6M18.9 5.1l-1.6 1.6M6.7 17.3l-1.6 1.6"/></svg>
+  <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.6A8.2 8.2 0 1 1 9.4 3.5a6.4 6.4 0 0 0 11.1 11.1z"/></svg>
+</button>
   <div class="page">
 
     <header class="page-head">
@@ -591,5 +665,23 @@
     </div>
 
   </div>
+<script>
+/* Theme toggle: flip data-theme, persist the choice, and keep following the OS
+   until the user makes an explicit choice. */
+(function () {
+  var root = document.documentElement;
+  var btn = document.querySelector(".theme-toggle");
+  if (btn) btn.addEventListener("click", function () {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+  var mq = window.matchMedia && matchMedia("(prefers-color-scheme: dark)");
+  if (mq && mq.addEventListener) mq.addEventListener("change", function (e) {
+    try { if (localStorage.getItem("theme")) return; } catch (_) {}
+    root.setAttribute("data-theme", e.matches ? "dark" : "light");
+  });
+})();
+</script>
 </body>
 </html>

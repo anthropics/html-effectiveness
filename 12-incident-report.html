@@ -4,8 +4,35 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>INC-2025-0412 — Elevated 502s on task sync</title>
+<script>
+/* Set the theme before first paint to avoid a flash. Stored choice wins;
+   otherwise follow the OS preference. localStorage may be blocked (e.g. file://) — fail soft. */
+(function () {
+  try {
+    var t = localStorage.getItem("theme");
+    if (t !== "dark" && t !== "light")
+      t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {
+    document.documentElement.setAttribute("data-theme", "light");
+  }
+})();
+</script>
 <style>
   :root {
+/* ── semantic roles — light (default) ── */
+    --bg:        #FAF9F5;
+    --surface:   #FFFFFF;
+    --text:      #141413;
+    --text-soft: #3D3D3A;
+    --text-mute: #87867F;
+    --border:    #D1CFC5;
+    --fill:      #F0EEE6;
+    --accent:    #D97757;
+    --accent-strong: #B85C3E;
+    --clay-soft: #E08A6B;   /* clay lifted for legibility on dark surfaces */
+    --tint:      #E3DACC;   /* warm tinted / inset surface */
+    color-scheme: light;
     --ivory: #FAF9F5;
     --slate: #141413;
     --clay: #D97757;
@@ -24,7 +51,7 @@
 
     --radius-panel: 12px;
     --radius-row: 8px;
-    --border: 1.5px solid var(--gray-300);
+    --border-line: 1.5px solid var(--border);
   }
 
   * { box-sizing: border-box; }
@@ -34,8 +61,8 @@
   body {
     margin: 0;
     padding: 56px 24px 120px;
-    background: var(--ivory);
-    color: var(--slate);
+    background: var(--bg);
+    color: var(--text);
     font-family: var(--sans);
     font-size: 15px;
     line-height: 1.6;
@@ -54,7 +81,7 @@
   .inc-id {
     font-family: var(--mono);
     font-size: 13px;
-    color: var(--gray-500);
+    color: var(--text-mute);
     letter-spacing: 0.02em;
     margin-bottom: 8px;
   }
@@ -88,18 +115,18 @@
     opacity: 0.75;
   }
   .pill.sev {
-    background: var(--clay);
-    color: var(--white);
+    background: var(--accent);
+    color: var(--surface);
     letter-spacing: 0.03em;
   }
   .pill.resolved {
     background: var(--olive);
-    color: var(--white);
+    color: var(--surface);
   }
   .pill.neutral {
-    background: var(--gray-100);
-    color: var(--gray-700);
-    border: var(--border);
+    background: var(--fill);
+    color: var(--text-soft);
+    border: var(--border-line);
   }
   .pill.neutral .v {
     font-family: var(--mono);
@@ -107,12 +134,15 @@
 
   /* ---------- TL;DR ---------- */
   .tldr {
-    background: var(--slate);
-    color: var(--ivory);
+    background: var(--text);
+    color: var(--bg);
     border-radius: var(--radius-panel);
     padding: 22px 26px;
     margin-bottom: 48px;
   }
+  /* keep the TL;DR a dark emphasis panel in both themes — it must not flip to a
+     light slab (its oat label + white-tint code only read on a dark ground) */
+  [data-theme="dark"] .tldr { background: #211F1B; color: var(--text); }
   .tldr-label {
     font-family: var(--mono);
     font-size: 11px;
@@ -148,14 +178,14 @@
   }
   hr.rule {
     border: none;
-    border-top: 1px solid var(--gray-300);
+    border-top: 1px solid var(--border);
     margin: 0 0 22px;
   }
   p { margin: 0 0 14px; }
   code.inline {
     font-family: var(--mono);
     font-size: 13px;
-    background: var(--gray-100);
+    background: var(--fill);
     padding: 1.5px 5px;
     border-radius: 4px;
   }
@@ -172,7 +202,7 @@
     top: 8px;
     bottom: 8px;
     width: 2px;
-    background: var(--gray-300);
+    background: var(--border);
   }
   .tl-entry {
     position: relative;
@@ -188,36 +218,40 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: var(--gray-500);
-    border: 2px solid var(--ivory);
+    background: var(--text-mute);
+    border: 2px solid var(--bg);
     box-sizing: content-box;
   }
-  .tl-dot.impact { background: var(--clay); }
+  .tl-dot.impact { background: var(--accent); }
   .tl-dot.mitigated { background: var(--olive); }
   .tl-time {
     display: inline-block;
     font-family: var(--mono);
     font-size: 12px;
-    color: var(--gray-700);
-    background: var(--gray-100);
-    border: 1px solid var(--gray-300);
+    color: var(--text-soft);
+    background: var(--fill);
+    border: 1px solid var(--border);
     border-radius: 6px;
     padding: 2px 8px;
     margin-bottom: 6px;
   }
   .tl-body {
     font-size: 14px;
-    color: var(--gray-700);
+    color: var(--text-soft);
   }
   .tl-body strong {
-    color: var(--slate);
+    color: var(--text);
     font-weight: 600;
   }
 
   /* ---------- Code diff ---------- */
+  /* keep the diff panel a dark terminal in both themes (its text uses
+     var(--fill)/var(--border), which would go dark-on-dark otherwise) */
+  [data-theme="dark"] .code-panel { background: #16140F; color: #E8E6DE; }
+  [data-theme="dark"] .code-panel .diff-line.ctx { color: #6B6A63; }
   .code-panel {
-    background: var(--slate);
-    color: var(--gray-100);
+    background: var(--text);
+    color: var(--fill);
     border-radius: var(--radius-panel);
     padding: 18px 20px;
     font-family: var(--mono);
@@ -227,13 +261,13 @@
     margin: 8px 0 4px;
   }
   .code-panel .path {
-    color: var(--gray-500);
+    color: var(--text-mute);
     font-size: 12px;
     margin-bottom: 10px;
     display: block;
   }
   .diff-line { white-space: pre; }
-  .diff-line.ctx { color: var(--gray-300); }
+  .diff-line.ctx { color: var(--border); }
   .diff-line.del { color: #E0897A; }
   .diff-line.add { color: #A3B88A; }
 
@@ -243,8 +277,8 @@
     max-width: 460px;
     border-collapse: separate;
     border-spacing: 0;
-    background: var(--white);
-    border: var(--border);
+    background: var(--surface);
+    border: var(--border-line);
     border-radius: var(--radius-panel);
     overflow: hidden;
   }
@@ -253,7 +287,7 @@
     text-align: left;
     padding: 12px 18px;
     font-size: 14px;
-    border-bottom: 1px solid var(--gray-100);
+    border-bottom: 1px solid var(--fill);
   }
   table.impact tr:last-child th,
   table.impact tr:last-child td {
@@ -261,18 +295,18 @@
   }
   table.impact th {
     font-weight: 400;
-    color: var(--gray-500);
+    color: var(--text-mute);
     width: 55%;
   }
   table.impact td {
     font-family: var(--mono);
-    color: var(--slate);
+    color: var(--text);
   }
 
   /* ---------- Action items ---------- */
   .actions {
-    background: var(--white);
-    border: var(--border);
+    background: var(--surface);
+    border: var(--border-line);
     border-radius: var(--radius-panel);
     overflow: hidden;
   }
@@ -282,15 +316,15 @@
     align-items: center;
     gap: 14px;
     padding: 14px 18px;
-    border-bottom: 1px solid var(--gray-100);
+    border-bottom: 1px solid var(--fill);
   }
   .ai-row:last-child { border-bottom: none; }
   .ai-check {
     width: 18px;
     height: 18px;
-    border: 1.5px solid var(--gray-300);
+    border: 1.5px solid var(--border);
     border-radius: 5px;
-    background: var(--white);
+    background: var(--surface);
     position: relative;
   }
   .ai-row.done .ai-check {
@@ -304,21 +338,21 @@
     top: 1px;
     width: 5px;
     height: 9px;
-    border: solid var(--white);
+    border: solid var(--surface);
     border-width: 0 2px 2px 0;
     transform: rotate(40deg);
   }
   .ai-row.done .ai-desc {
-    color: var(--gray-500);
+    color: var(--text-mute);
     text-decoration: line-through;
-    text-decoration-color: var(--gray-300);
+    text-decoration-color: var(--border);
   }
   .ai-avatar {
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    background: var(--oat);
-    color: var(--gray-700);
+    background: var(--tint);
+    color: var(--text-soft);
     font-size: 11px;
     font-weight: 600;
     display: flex;
@@ -328,12 +362,12 @@
   }
   .ai-desc {
     font-size: 14px;
-    color: var(--slate);
+    color: var(--text);
   }
   .ai-due {
     font-family: var(--mono);
     font-size: 12px;
-    color: var(--gray-500);
+    color: var(--text-mute);
     text-align: right;
   }
 
@@ -355,34 +389,74 @@
       font-size: 10px;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      color: var(--gray-500);
+      color: var(--text-mute);
       margin-bottom: 12px;
     }
     .toc a {
       display: block;
-      color: var(--gray-500);
+      color: var(--text-mute);
       text-decoration: none;
       padding: 5px 0 5px 12px;
-      border-left: 1.5px solid var(--gray-300);
+      border-left: 1.5px solid var(--border);
       line-height: 1.3;
     }
     .toc a:hover {
-      color: var(--slate);
-      border-left-color: var(--clay);
+      color: var(--text);
+      border-left-color: var(--accent);
     }
   }
 
   footer {
     margin-top: 64px;
     padding-top: 20px;
-    border-top: 1px solid var(--gray-300);
+    border-top: 1px solid var(--border);
     font-family: var(--mono);
     font-size: 12px;
-    color: var(--gray-500);
+    color: var(--text-mute);
   }
+/* ── semantic roles — dark ── */
+  [data-theme="dark"] {
+    --bg:        #1A1815;
+    --surface:   #211F1B;
+    --text:      #ECEAE3;
+    --text-soft: #C9C6BD;
+    --text-mute: #9C9A93;
+    --border:    #3A382F;
+    --fill:      #26241E;
+    --accent:    var(--clay-soft);
+    --accent-strong: #D97757;
+    --tint:      #2E2A22;
+    color-scheme: dark;
+  }
+
+  /* ── theme toggle (identical across the gallery) ── */
+  .theme-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 1000;
+    width: 38px; height: 38px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+  }
+  .theme-toggle:hover { border-color: var(--text); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .theme-toggle svg { width: 18px; height: 18px; }
+  .theme-toggle .sun  { display: none; }
+  .theme-toggle .moon { display: block; }
+  [data-theme="dark"] .theme-toggle .sun  { display: block; }
+  [data-theme="dark"] .theme-toggle .moon { display: none; }
+  @media print { .theme-toggle { display: none; } }
 </style>
 </head>
 <body>
+<button class="theme-toggle" type="button" aria-label="Switch between light and dark theme" title="Switch theme">
+  <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.1 5.1l1.6 1.6M17.3 17.3l1.6 1.6M18.9 5.1l-1.6 1.6M6.7 17.3l-1.6 1.6"/></svg>
+  <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.6A8.2 8.2 0 1 1 9.4 3.5a6.4 6.4 0 0 0 11.1 11.1z"/></svg>
+</button>
 
   <nav class="toc">
     <div class="toc-title">On this page</div>
@@ -592,5 +666,23 @@
     </footer>
 
   </div>
+<script>
+/* Theme toggle: flip data-theme, persist the choice, and keep following the OS
+   until the user makes an explicit choice. */
+(function () {
+  var root = document.documentElement;
+  var btn = document.querySelector(".theme-toggle");
+  if (btn) btn.addEventListener("click", function () {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+  var mq = window.matchMedia && matchMedia("(prefers-color-scheme: dark)");
+  if (mq && mq.addEventListener) mq.addEventListener("change", function (e) {
+    try { if (localStorage.getItem("theme")) return; } catch (_) {}
+    root.setAttribute("data-theme", e.matches ? "dark" : "light");
+  });
+})();
+</script>
 </body>
 </html>
