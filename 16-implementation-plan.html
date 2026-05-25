@@ -4,8 +4,37 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Implementation plan — Comment threads on task cards</title>
+<script>
+/* Set the theme before first paint to avoid a flash. Stored choice wins;
+   otherwise follow the OS preference. localStorage may be blocked (e.g. file://) — fail soft. */
+(function () {
+  try {
+    var t = localStorage.getItem("theme");
+    if (t !== "dark" && t !== "light")
+      t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {
+    document.documentElement.setAttribute("data-theme", "light");
+  }
+})();
+</script>
   <style>
     :root {
+/* ── semantic roles — light (default) ── */
+    --bg:        #FAF9F5;
+    --surface:   #FFFFFF;
+    --text:      #141413;
+    --text-soft: #3D3D3A;
+    --text-mute: #87867F;
+    --border:    #D1CFC5;
+    --fill:      #F0EEE6;
+    --accent:    #D97757;
+    --accent-strong: #B85C3E;
+    --clay-soft: #E08A6B;   /* clay lifted for legibility on dark surfaces */
+    --tint:      #E3DACC;   /* warm tinted / inset surface */
+    --add-fg: #4B5C39; --add-bg: #E4E9DC;   /* status: low / added   */
+    --del-fg: #8A3B1E; --del-bg: #F3D9CC;   /* status: high / removed */
+    color-scheme: light;
       --ivory:    #FAF9F5;
       --slate:    #141413;
       --clay:     #D97757;
@@ -26,8 +55,8 @@
 
     body {
       font-family: var(--sans);
-      background: var(--ivory);
-      color: var(--gray-700);
+      background: var(--bg);
+      color: var(--text-soft);
       line-height: 1.55;
       padding: 56px 32px 120px;
       -webkit-font-smoothing: antialiased;
@@ -43,7 +72,7 @@
       font-size: 12px;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: var(--gray-500);
+      color: var(--text-mute);
       margin-bottom: 12px;
     }
 
@@ -52,25 +81,25 @@
       font-weight: 500;
       font-size: 38px;
       line-height: 1.15;
-      color: var(--slate);
+      color: var(--text);
       margin-bottom: 18px;
       letter-spacing: -0.01em;
     }
 
     .prompt-box {
-      background: var(--gray-150);
-      border: 1.5px solid var(--gray-300);
+      background: var(--fill);
+      border: 1.5px solid var(--border);
       border-radius: 12px;
       padding: 16px 20px;
       font-size: 14.5px;
-      color: var(--gray-700);
+      color: var(--text-soft);
     }
     .prompt-box .label {
       font-family: var(--mono);
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: var(--gray-500);
+      color: var(--text-mute);
       display: block;
       margin-bottom: 6px;
     }
@@ -88,8 +117,8 @@
     .sec-head .num {
       font-family: var(--mono);
       font-size: 12px;
-      background: var(--oat);
-      color: var(--slate);
+      background: var(--tint);
+      color: var(--text);
       padding: 3px 9px;
       border-radius: 8px;
     }
@@ -97,12 +126,12 @@
       font-family: var(--serif);
       font-weight: 500;
       font-size: 26px;
-      color: var(--slate);
+      color: var(--text);
       letter-spacing: -0.01em;
     }
     .sec-intro {
       font-size: 14.5px;
-      color: var(--gray-500);
+      color: var(--text-mute);
       max-width: 720px;
       margin-bottom: 28px;
     }
@@ -117,8 +146,8 @@
     }
     @media (max-width: 900px) { .summary { grid-template-columns: repeat(2, 1fr); } }
     .summary .cell {
-      background: var(--white);
-      border: 1.5px solid var(--gray-300);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
       border-radius: 12px;
       padding: 18px 20px;
     }
@@ -127,15 +156,15 @@
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: var(--gray-500);
+      color: var(--text-mute);
       margin-bottom: 6px;
     }
     .summary .v {
       font-size: 17px;
-      color: var(--slate);
+      color: var(--text);
       font-weight: 600;
     }
-    .summary .v.accent { color: var(--clay); }
+    .summary .v.accent { color: var(--accent); }
 
     /* ---------- milestone timeline ---------- */
 
@@ -150,7 +179,7 @@
       text-align: right;
       font-family: var(--mono);
       font-size: 12px;
-      color: var(--gray-500);
+      color: var(--text-mute);
       padding-top: 4px;
     }
     .milestone .dot-col {
@@ -161,8 +190,8 @@
     .milestone .dot {
       width: 14px; height: 14px;
       border-radius: 50%;
-      background: var(--white);
-      border: 3px solid var(--clay);
+      background: var(--surface);
+      border: 3px solid var(--accent);
       margin-top: 4px;
       flex-shrink: 0;
     }
@@ -170,7 +199,7 @@
     .milestone .line {
       width: 2px;
       flex: 1;
-      background: var(--gray-300);
+      background: var(--border);
       margin: 4px 0;
     }
     .milestone:last-child .line { display: none; }
@@ -179,33 +208,33 @@
       font-family: var(--serif);
       font-weight: 500;
       font-size: 19px;
-      color: var(--slate);
+      color: var(--text);
       margin-bottom: 4px;
     }
-    .milestone .body p { font-size: 14px; color: var(--gray-500); margin-bottom: 10px; max-width: 620px; }
+    .milestone .body p { font-size: 14px; color: var(--text-mute); margin-bottom: 10px; max-width: 620px; }
     .milestone .tags { display: flex; gap: 8px; flex-wrap: wrap; }
     .milestone .tag {
       font-family: var(--mono);
       font-size: 11.5px;
-      background: var(--gray-150);
-      border: 1px solid var(--gray-300);
+      background: var(--fill);
+      border: 1px solid var(--border);
       border-radius: 6px;
       padding: 3px 8px;
-      color: var(--gray-700);
+      color: var(--text-soft);
     }
 
     /* ---------- data flow diagram ---------- */
 
     .diagram {
-      background: var(--white);
-      border: 1.5px solid var(--gray-300);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
       border-radius: 12px;
       padding: 28px;
       overflow-x: auto;
     }
     .diagram svg { display: block; min-width: 760px; }
     .diagram text { font-family: var(--mono); }
-    .caption { font-size: 13px; color: var(--gray-500); margin-top: 12px; }
+    .caption { font-size: 13px; color: var(--text-mute); margin-top: 12px; }
 
     /* ---------- mockups ---------- */
 
@@ -216,48 +245,48 @@
     }
     @media (max-width: 900px) { .mocks { grid-template-columns: 1fr; } }
     .mock {
-      background: var(--white);
-      border: 1.5px solid var(--gray-300);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
       border-radius: 12px;
       overflow: hidden;
     }
     .mock .mock-label {
       padding: 12px 18px;
-      border-bottom: 1.5px solid var(--gray-300);
+      border-bottom: 1.5px solid var(--border);
       font-family: var(--mono);
       font-size: 11.5px;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: var(--gray-500);
-      background: var(--gray-150);
+      color: var(--text-mute);
+      background: var(--fill);
     }
     .mock .mock-body { padding: 22px; }
 
     /* task card mock */
     .card-mock {
-      border: 1.5px solid var(--gray-300);
+      border: 1.5px solid var(--border);
       border-radius: 10px;
       padding: 16px;
-      background: var(--ivory);
+      background: var(--bg);
     }
-    .card-mock .cm-title { font-weight: 600; font-size: 15px; color: var(--slate); margin-bottom: 4px; }
-    .card-mock .cm-meta { font-size: 12px; color: var(--gray-500); margin-bottom: 14px; }
-    .card-mock .cm-divider { border-top: 1px dashed var(--gray-300); margin: 14px 0; }
+    .card-mock .cm-title { font-weight: 600; font-size: 15px; color: var(--text); margin-bottom: 4px; }
+    .card-mock .cm-meta { font-size: 12px; color: var(--text-mute); margin-bottom: 14px; }
+    .card-mock .cm-divider { border-top: 1px dashed var(--border); margin: 14px 0; }
     .thread { display: flex; flex-direction: column; gap: 12px; }
     .comment { display: flex; gap: 10px; }
     .comment .avatar {
       width: 26px; height: 26px; border-radius: 50%;
-      background: var(--oat);
+      background: var(--tint);
       flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
-      font-size: 11px; font-weight: 600; color: var(--slate);
+      font-size: 11px; font-weight: 600; color: var(--text);
     }
-    .comment .avatar.alt { background: var(--olive); color: var(--white); }
+    .comment .avatar.alt { background: var(--olive); color: var(--surface); }
     .comment .bubble { flex: 1; }
-    .comment .author { font-size: 12px; font-weight: 600; color: var(--slate); }
-    .comment .author .time { font-weight: 400; color: var(--gray-500); margin-left: 6px; }
-    .comment .text { font-size: 13px; color: var(--gray-700); margin-top: 2px; }
-    .comment .reply-link { font-size: 11.5px; color: var(--clay); margin-top: 4px; cursor: default; }
+    .comment .author { font-size: 12px; font-weight: 600; color: var(--text); }
+    .comment .author .time { font-weight: 400; color: var(--text-mute); margin-left: 6px; }
+    .comment .text { font-size: 13px; color: var(--text-soft); margin-top: 2px; }
+    .comment .reply-link { font-size: 11.5px; color: var(--accent); margin-top: 4px; cursor: default; }
     .comment.nested { margin-left: 36px; }
     .composer {
       display: flex; gap: 10px; align-items: center;
@@ -265,16 +294,16 @@
     }
     .composer .field {
       flex: 1;
-      border: 1.5px solid var(--gray-300);
+      border: 1.5px solid var(--border);
       border-radius: 8px;
       padding: 8px 12px;
       font-size: 13px;
-      color: var(--gray-500);
-      background: var(--white);
+      color: var(--text-mute);
+      background: var(--surface);
     }
     .composer .send {
-      background: var(--clay);
-      color: var(--white);
+      background: var(--accent);
+      color: var(--surface);
       border-radius: 8px;
       padding: 8px 14px;
       font-size: 13px;
@@ -286,21 +315,21 @@
     .digest .row {
       display: flex; gap: 10px; align-items: flex-start;
       padding: 10px 12px;
-      background: var(--ivory);
-      border: 1.5px solid var(--gray-300);
+      background: var(--bg);
+      border: 1.5px solid var(--border);
       border-radius: 8px;
     }
-    .digest .row.unread { border-left: 3px solid var(--clay); }
+    .digest .row.unread { border-left: 3px solid var(--accent); }
     .digest .mini-av {
       width: 22px; height: 22px; border-radius: 50%;
-      background: var(--oat);
+      background: var(--tint);
       flex-shrink: 0;
-      font-size: 10px; font-weight: 600; color: var(--slate);
+      font-size: 10px; font-weight: 600; color: var(--text);
       display: flex; align-items: center; justify-content: center;
     }
-    .digest .txt { font-size: 12.5px; color: var(--gray-700); line-height: 1.45; }
-    .digest .txt strong { color: var(--slate); }
-    .digest .txt .on { color: var(--gray-500); }
+    .digest .txt { font-size: 12.5px; color: var(--text-soft); line-height: 1.45; }
+    .digest .txt strong { color: var(--text); }
+    .digest .txt .on { color: var(--text-mute); }
 
     /* ---------- code panel ---------- */
 
@@ -310,10 +339,12 @@
     .code-block .file-label {
       font-family: var(--mono);
       font-size: 12px;
-      color: var(--gray-500);
+      color: var(--text-mute);
     }
+    /* keep the code block a dark surface in both themes */
+    [data-theme="dark"] .code { background: #16140F; }
     .code {
-      background: var(--slate);
+      background: var(--text);
       border-radius: 12px;
       padding: 18px 20px;
       overflow-x: auto;
@@ -326,18 +357,18 @@
       color: #E8E6DE;
       white-space: pre;
     }
-    .code .kw  { color: var(--clay); }
+    .code .kw  { color: var(--accent); }
     .code .str { color: var(--olive); }
-    .code .cm  { color: var(--gray-500); }
+    .code .cm  { color: var(--text-mute); }
     .code .fn  { color: #C9B98A; }
 
     /* ---------- risk table ---------- */
 
     .risks {
-      border: 1.5px solid var(--gray-300);
+      border: 1.5px solid var(--border);
       border-radius: 12px;
       overflow: hidden;
-      background: var(--white);
+      background: var(--surface);
     }
     .risks .row {
       display: grid;
@@ -345,11 +376,11 @@
       gap: 0;
     }
     @media (max-width: 780px) { .risks .row { grid-template-columns: 1fr; } }
-    .risks .row + .row { border-top: 1.5px solid var(--gray-300); }
+    .risks .row + .row { border-top: 1.5px solid var(--border); }
     .risks .cell { padding: 14px 18px; font-size: 13.5px; }
-    .risks .cell + .cell { border-left: 1.5px solid var(--gray-300); }
-    @media (max-width: 780px) { .risks .cell + .cell { border-left: none; border-top: 1px dashed var(--gray-300); } }
-    .risks .head { background: var(--gray-150); font-weight: 600; color: var(--slate); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .risks .cell + .cell { border-left: 1.5px solid var(--border); }
+    @media (max-width: 780px) { .risks .cell + .cell { border-left: none; border-top: 1px dashed var(--border); } }
+    .risks .head { background: var(--fill); font-weight: 600; color: var(--text); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
     .sev {
       display: inline-block;
       font-family: var(--mono);
@@ -358,31 +389,86 @@
       border-radius: 6px;
       font-weight: 600;
     }
-    .sev.high { background: #F3D9CC; color: #8A3B1E; }
-    .sev.med  { background: var(--oat); color: var(--slate); }
-    .sev.low  { background: #E4E9DC; color: #4B5C39; }
+    .sev.high { background: var(--del-bg); color: var(--del-fg); }
+    .sev.med  { background: var(--tint); color: var(--text); }
+    .sev.low  { background: var(--add-bg); color: var(--add-fg); }
 
     /* ---------- open questions ---------- */
 
     .open-q { display: flex; flex-direction: column; gap: 14px; max-width: 820px; }
     .q {
-      background: var(--white);
-      border: 1.5px solid var(--gray-300);
-      border-left: 4px solid var(--clay);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-left: 4px solid var(--accent);
       border-radius: 10px;
       padding: 16px 20px;
     }
-    .q .qt { font-weight: 600; font-size: 15px; color: var(--slate); margin-bottom: 4px; }
-    .q .qd { font-size: 13.5px; color: var(--gray-500); }
+    .q .qt { font-weight: 600; font-size: 15px; color: var(--text); margin-bottom: 4px; }
+    .q .qd { font-size: 13.5px; color: var(--text-mute); }
     .q .owner {
       font-family: var(--mono);
       font-size: 11.5px;
-      color: var(--gray-500);
+      color: var(--text-mute);
       margin-top: 8px;
     }
-  </style>
+  /* ── semantic roles — dark ── */
+  [data-theme="dark"] {
+    --bg:        #1A1815;
+    --surface:   #211F1B;
+    --text:      #ECEAE3;
+    --text-soft: #C9C6BD;
+    --text-mute: #9C9A93;
+    --border:    #3A382F;
+    --fill:      #26241E;
+    --accent:    var(--clay-soft);
+    --accent-strong: #D97757;
+    --tint:      #2E2A22;
+    --add-fg: #A7C08A; --add-bg: #222C1B;
+    --del-fg: #E5A08C; --del-bg: #33231C;
+    color-scheme: dark;
+  }
+
+  /* re-theme attribute-based SVG for dark — CSS fill/stroke override the SVG
+     presentation attributes, so charts/diagrams adapt without editing the SVG.
+     Mid-tones (#87867F, oat, olive, clay) are left as-is: they read on both themes. */
+  [data-theme="dark"] svg [fill="#141413"],
+  [data-theme="dark"] svg [fill="#3D3D3A"] { fill: var(--text); }
+  [data-theme="dark"] svg [fill="#FAF9F5"],
+  [data-theme="dark"] svg [fill="#FFFFFF"],
+  [data-theme="dark"] svg [fill="#F0EEE6"] { fill: var(--surface); }
+  [data-theme="dark"] svg [stroke="#141413"],
+  [data-theme="dark"] svg [stroke="#3D3D3A"] { stroke: var(--text); }
+  [data-theme="dark"] svg [stroke="#D1CFC5"],
+  [data-theme="dark"] svg [stroke="#E6E3DA"],
+  [data-theme="dark"] svg [stroke="#F0EEE6"] { stroke: var(--border); }
+  /* ── theme toggle (identical across the gallery) ── */
+  .theme-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 1000;
+    width: 38px; height: 38px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+  }
+  .theme-toggle:hover { border-color: var(--text); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .theme-toggle svg { width: 18px; height: 18px; }
+  .theme-toggle .sun  { display: none; }
+  .theme-toggle .moon { display: block; }
+  [data-theme="dark"] .theme-toggle .sun  { display: block; }
+  [data-theme="dark"] .theme-toggle .moon { display: none; }
+  @media print { .theme-toggle { display: none; } }
+</style>
 </head>
 <body>
+<button class="theme-toggle" type="button" aria-label="Switch between light and dark theme" title="Switch theme">
+  <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.1 5.1l1.6 1.6M17.3 17.3l1.6 1.6M18.9 5.1l-1.6 1.6M6.7 17.3l-1.6 1.6"/></svg>
+  <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.6A8.2 8.2 0 1 1 9.4 3.5a6.4 6.4 0 0 0 11.1 11.1z"/></svg>
+</button>
   <div class="page">
 
     <header class="page-head">
@@ -698,5 +784,23 @@
     </section>
 
   </div>
+<script>
+/* Theme toggle: flip data-theme, persist the choice, and keep following the OS
+   until the user makes an explicit choice. */
+(function () {
+  var root = document.documentElement;
+  var btn = document.querySelector(".theme-toggle");
+  if (btn) btn.addEventListener("click", function () {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+  var mq = window.matchMedia && matchMedia("(prefers-color-scheme: dark)");
+  if (mq && mq.addEventListener) mq.addEventListener("change", function (e) {
+    try { if (localStorage.getItem("theme")) return; } catch (_) {}
+    root.setAttribute("data-theme", e.matches ? "dark" : "light");
+  });
+})();
+</script>
 </body>
 </html>

@@ -4,8 +4,35 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Acme — Engineering Status — Week 11</title>
+<script>
+/* Set the theme before first paint to avoid a flash. Stored choice wins;
+   otherwise follow the OS preference. localStorage may be blocked (e.g. file://) — fail soft. */
+(function () {
+  try {
+    var t = localStorage.getItem("theme");
+    if (t !== "dark" && t !== "light")
+      t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {
+    document.documentElement.setAttribute("data-theme", "light");
+  }
+})();
+</script>
 <style>
   :root {
+/* ── semantic roles — light (default) ── */
+    --bg:        #FAF9F5;
+    --surface:   #FFFFFF;
+    --text:      #141413;
+    --text-soft: #3D3D3A;
+    --text-mute: #87867F;
+    --border:    #D1CFC5;
+    --fill:      #F0EEE6;
+    --accent:    #D97757;
+    --accent-strong: #B85C3E;
+    --clay-soft: #E08A6B;   /* clay lifted for legibility on dark surfaces */
+    --tint:      #E3DACC;   /* warm tinted / inset surface */
+    color-scheme: light;
     --ivory: #FAF9F5;
     --slate: #141413;
     --clay: #D97757;
@@ -24,7 +51,7 @@
 
     --radius-panel: 12px;
     --radius-row: 8px;
-    --border: 1.5px solid var(--gray-300);
+    --border-line: 1.5px solid var(--border);
   }
 
   * { box-sizing: border-box; }
@@ -32,8 +59,8 @@
   body {
     margin: 0;
     padding: 56px 24px 120px;
-    background: var(--ivory);
-    color: var(--slate);
+    background: var(--bg);
+    color: var(--text);
     font-family: var(--sans);
     font-size: 15px;
     line-height: 1.6;
@@ -69,21 +96,21 @@
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--gray-500);
-    background: var(--gray-100);
-    border: var(--border);
+    color: var(--text-mute);
+    background: var(--fill);
+    border: var(--border-line);
     border-radius: 999px;
     padding: 5px 11px;
     white-space: nowrap;
   }
   .date-range {
-    color: var(--gray-500);
+    color: var(--text-mute);
     font-size: 14px;
   }
   .date-range .repo {
     font-family: var(--mono);
     font-size: 13px;
-    color: var(--gray-700);
+    color: var(--text-soft);
   }
 
   /* ---------- Sections ---------- */
@@ -99,7 +126,7 @@
   }
   hr.rule {
     border: none;
-    border-top: 1px solid var(--gray-300);
+    border-top: 1px solid var(--border);
     margin: 0 0 22px;
   }
 
@@ -113,13 +140,13 @@
     .summary-band { grid-template-columns: repeat(2, 1fr); }
   }
   .stat-card {
-    background: var(--white);
-    border: var(--border);
+    background: var(--surface);
+    border: var(--border-line);
     border-radius: var(--radius-panel);
     padding: 20px 22px 18px;
   }
   .stat-card.warn {
-    border-left: 4px solid var(--clay);
+    border-left: 4px solid var(--accent);
     padding-left: 19px;
   }
   .stat-num {
@@ -127,7 +154,7 @@
     font-size: 44px;
     font-weight: 500;
     line-height: 1;
-    color: var(--slate);
+    color: var(--text);
     margin-bottom: 8px;
   }
   .stat-label {
@@ -135,7 +162,7 @@
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--gray-500);
+    color: var(--text-mute);
   }
   .stat-delta {
     font-family: var(--mono);
@@ -143,7 +170,7 @@
     margin-top: 6px;
   }
   .stat-delta.up { color: var(--olive); }
-  .stat-delta.flat { color: var(--gray-500); }
+  .stat-delta.flat { color: var(--text-mute); }
 
   /* ---------- Highlights ---------- */
   .highlights {
@@ -155,7 +182,7 @@
     position: relative;
     padding: 0 0 14px 26px;
     font-size: 15px;
-    color: var(--gray-700);
+    color: var(--text-soft);
   }
   .highlights li::before {
     content: "";
@@ -165,10 +192,10 @@
     width: 7px;
     height: 7px;
     border-radius: 2px;
-    background: var(--clay);
+    background: var(--accent);
   }
   .highlights li strong {
-    color: var(--slate);
+    color: var(--text);
     font-weight: 600;
   }
 
@@ -177,8 +204,8 @@
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    background: var(--white);
-    border: var(--border);
+    background: var(--surface);
+    border: var(--border-line);
     border-radius: var(--radius-panel);
     overflow: hidden;
   }
@@ -189,14 +216,14 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--gray-500);
-    background: var(--gray-100);
+    color: var(--text-mute);
+    background: var(--fill);
     padding: 12px 16px;
-    border-bottom: 1px solid var(--gray-300);
+    border-bottom: 1px solid var(--border);
   }
   table.shipped tbody td {
     padding: 13px 16px;
-    border-bottom: 1px solid var(--gray-100);
+    border-bottom: 1px solid var(--fill);
     font-size: 14px;
     vertical-align: middle;
   }
@@ -204,20 +231,20 @@
     border-bottom: none;
   }
   table.shipped tbody tr:hover {
-    background: var(--ivory);
+    background: var(--bg);
   }
   .pr-link {
     font-family: var(--mono);
     font-size: 13px;
-    color: var(--clay);
+    color: var(--accent);
     text-decoration: none;
     border-bottom: 1px dotted transparent;
   }
   .pr-link:hover {
-    border-bottom-color: var(--clay);
+    border-bottom-color: var(--accent);
   }
   .author {
-    color: var(--gray-700);
+    color: var(--text-soft);
     font-size: 13px;
   }
   .risk {
@@ -225,7 +252,7 @@
     align-items: center;
     gap: 7px;
     font-size: 12px;
-    color: var(--gray-500);
+    color: var(--text-mute);
   }
   .risk-dot {
     width: 9px;
@@ -234,13 +261,13 @@
     flex-shrink: 0;
   }
   .risk-dot.low { background: var(--olive); }
-  .risk-dot.med { background: var(--clay); }
+  .risk-dot.med { background: var(--accent); }
   .risk-dot.high { background: var(--rust); }
 
   /* ---------- Velocity chart ---------- */
   .chart-panel {
-    background: var(--white);
-    border: var(--border);
+    background: var(--surface);
+    border: var(--border-line);
     border-radius: var(--radius-panel);
     padding: 24px 28px 18px;
   }
@@ -251,13 +278,13 @@
   }
   .chart-caption {
     font-size: 12px;
-    color: var(--gray-500);
+    color: var(--text-mute);
     margin-top: 12px;
   }
 
   /* ---------- Carryover ---------- */
   .carryover {
-    background: var(--oat);
+    background: var(--tint);
     border-radius: var(--radius-panel);
     padding: 20px 22px;
   }
@@ -275,18 +302,18 @@
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--gray-700);
-    background: var(--ivory);
+    color: var(--text-soft);
+    background: var(--bg);
     border-radius: 4px;
     padding: 3px 7px;
     flex-shrink: 0;
   }
   .carry-body {
     font-size: 14px;
-    color: var(--gray-700);
+    color: var(--text-soft);
   }
   .carry-body .who {
-    color: var(--gray-500);
+    color: var(--text-mute);
     font-size: 12px;
   }
 
@@ -294,14 +321,68 @@
   footer {
     margin-top: 64px;
     padding-top: 20px;
-    border-top: 1px solid var(--gray-300);
+    border-top: 1px solid var(--border);
     font-family: var(--mono);
     font-size: 12px;
-    color: var(--gray-500);
+    color: var(--text-mute);
   }
+/* ── semantic roles — dark ── */
+  [data-theme="dark"] {
+    --bg:        #1A1815;
+    --surface:   #211F1B;
+    --text:      #ECEAE3;
+    --text-soft: #C9C6BD;
+    --text-mute: #9C9A93;
+    --border:    #3A382F;
+    --fill:      #26241E;
+    --accent:    var(--clay-soft);
+    --accent-strong: #D97757;
+    --tint:      #2E2A22;
+    color-scheme: dark;
+  }
+
+  /* re-theme attribute-based SVG for dark — CSS fill/stroke override the SVG
+     presentation attributes, so charts/diagrams adapt without editing the SVG.
+     Mid-tones (#87867F, oat, olive, clay) are left as-is: they read on both themes. */
+  [data-theme="dark"] svg [fill="#141413"],
+  [data-theme="dark"] svg [fill="#3D3D3A"] { fill: var(--text); }
+  [data-theme="dark"] svg [fill="#FAF9F5"],
+  [data-theme="dark"] svg [fill="#FFFFFF"],
+  [data-theme="dark"] svg [fill="#F0EEE6"] { fill: var(--surface); }
+  [data-theme="dark"] svg [stroke="#141413"],
+  [data-theme="dark"] svg [stroke="#3D3D3A"] { stroke: var(--text); }
+  [data-theme="dark"] svg [stroke="#D1CFC5"],
+  [data-theme="dark"] svg [stroke="#E6E3DA"],
+  [data-theme="dark"] svg [stroke="#F0EEE6"] { stroke: var(--border); }
+
+  /* ── theme toggle (identical across the gallery) ── */
+  .theme-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 1000;
+    width: 38px; height: 38px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+  }
+  .theme-toggle:hover { border-color: var(--text); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .theme-toggle svg { width: 18px; height: 18px; }
+  .theme-toggle .sun  { display: none; }
+  .theme-toggle .moon { display: block; }
+  [data-theme="dark"] .theme-toggle .sun  { display: block; }
+  [data-theme="dark"] .theme-toggle .moon { display: none; }
+  @media print { .theme-toggle { display: none; } }
 </style>
 </head>
 <body>
+<button class="theme-toggle" type="button" aria-label="Switch between light and dark theme" title="Switch theme">
+  <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.1 5.1l1.6 1.6M17.3 17.3l1.6 1.6M18.9 5.1l-1.6 1.6M6.7 17.3l-1.6 1.6"/></svg>
+  <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.6A8.2 8.2 0 1 1 9.4 3.5a6.4 6.4 0 0 0 11.1 11.1z"/></svg>
+</button>
   <div class="page">
 
     <header>
@@ -524,5 +605,23 @@
     </footer>
 
   </div>
+<script>
+/* Theme toggle: flip data-theme, persist the choice, and keep following the OS
+   until the user makes an explicit choice. */
+(function () {
+  var root = document.documentElement;
+  var btn = document.querySelector(".theme-toggle");
+  if (btn) btn.addEventListener("click", function () {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+  var mq = window.matchMedia && matchMedia("(prefers-color-scheme: dark)");
+  if (mq && mq.addEventListener) mq.addEventListener("change", function (e) {
+    try { if (localStorage.getItem("theme")) return; } catch (_) {}
+    root.setAttribute("data-theme", e.matches ? "dark" : "light");
+  });
+})();
+</script>
 </body>
 </html>

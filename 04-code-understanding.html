@@ -4,8 +4,35 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>How authentication flows through acme/web</title>
+<script>
+/* Set the theme before first paint to avoid a flash. Stored choice wins;
+   otherwise follow the OS preference. localStorage may be blocked (e.g. file://) — fail soft. */
+(function () {
+  try {
+    var t = localStorage.getItem("theme");
+    if (t !== "dark" && t !== "light")
+      t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {
+    document.documentElement.setAttribute("data-theme", "light");
+  }
+})();
+</script>
 <style>
   :root {
+/* ── semantic roles — light (default) ── */
+    --bg:        #FAF9F5;
+    --surface:   #FFFFFF;
+    --text:      #141413;
+    --text-soft: #3D3D3A;
+    --text-mute: #87867F;
+    --border:    #D1CFC5;
+    --fill:      #F0EEE6;
+    --accent:    #D97757;
+    --accent-strong: #B85C3E;
+    --clay-soft: #E08A6B;   /* clay lifted for legibility on dark surfaces */
+    --tint:      #E3DACC;   /* warm tinted / inset surface */
+    color-scheme: light;
     --ivory: #FAF9F5;
     --slate: #141413;
     --clay: #D97757;
@@ -24,8 +51,8 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    background: var(--ivory);
-    color: var(--gray-700);
+    background: var(--bg);
+    color: var(--text-soft);
     font-family: var(--sans);
     font-size: 15px;
     line-height: 1.65;
@@ -53,7 +80,7 @@
   .repo-line {
     font-family: var(--mono);
     font-size: 12.5px;
-    color: var(--gray-500);
+    color: var(--text-mute);
     margin-bottom: 10px;
   }
 
@@ -62,7 +89,7 @@
     font-weight: 500;
     font-size: 32px;
     line-height: 1.25;
-    color: var(--slate);
+    color: var(--text);
     margin-bottom: 16px;
   }
 
@@ -76,15 +103,15 @@
     font-family: var(--serif);
     font-weight: 500;
     font-size: 22px;
-    color: var(--slate);
+    color: var(--text);
     margin: 36px 0 16px;
   }
 
   /* ---------- Diagram ---------- */
   .diagram-panel {
-    border: 1.5px solid var(--gray-300);
+    border: 1.5px solid var(--border);
     border-radius: 12px;
-    background: #fff;
+    background: var(--surface);
     padding: 20px;
     overflow-x: auto;
   }
@@ -93,12 +120,12 @@
   .flow text {
     font-family: var(--mono);
     font-size: 12px;
-    fill: var(--slate);
+    fill: var(--text);
   }
-  .flow .sub { font-size: 10px; fill: var(--gray-500); }
-  .flow .box { fill: #fff; stroke: var(--gray-300); stroke-width: 1.5; }
-  .flow .box.hot { fill: rgba(217,119,87,0.10); stroke: var(--clay); }
-  .flow .arrow { stroke: var(--gray-500); stroke-width: 1.5; fill: none; }
+  .flow .sub { font-size: 10px; fill: var(--text-mute); }
+  .flow .box { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+  .flow .box.hot { fill: rgba(217,119,87,0.10); stroke: var(--accent); }
+  .flow .arrow { stroke: var(--text-mute); stroke-width: 1.5; fill: none; }
 
   /* ---------- Walkthrough ---------- */
   .step {
@@ -106,7 +133,7 @@
     grid-template-columns: 44px 1fr;
     gap: 18px;
     padding: 20px 0;
-    border-bottom: 1.5px solid var(--gray-150);
+    border-bottom: 1.5px solid var(--fill);
   }
   .step:last-of-type { border-bottom: none; }
 
@@ -114,29 +141,29 @@
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    background: var(--oat);
-    border: 1.5px solid var(--gray-300);
+    background: var(--tint);
+    border: 1.5px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: var(--mono);
     font-weight: 600;
-    color: var(--slate);
+    color: var(--text);
     font-size: 14px;
   }
   .step.hot .badge {
     background: rgba(217,119,87,0.14);
-    border-color: var(--clay);
-    color: var(--clay);
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   .step-loc {
     font-family: var(--mono);
     font-size: 13px;
-    color: var(--slate);
+    color: var(--text);
     margin-bottom: 6px;
   }
-  .step-loc .range { color: var(--gray-500); }
+  .step-loc .range { color: var(--text-mute); }
 
   .step-body p { margin-bottom: 10px; }
 
@@ -145,7 +172,7 @@
     list-style: none;
     cursor: pointer;
     font-size: 12.5px;
-    color: var(--gray-500);
+    color: var(--text-mute);
     font-family: var(--mono);
     display: inline-flex;
     align-items: center;
@@ -161,8 +188,10 @@
   }
   details.snippet[open] summary::before { transform: rotate(90deg); }
 
+  /* keep the code block a dark surface in both themes */
+  [data-theme="dark"] pre.code { background: #16140F; }
   pre.code {
-    background: var(--slate);
+    background: var(--text);
     color: #E8E6DC;
     font-family: var(--mono);
     font-size: 12.5px;
@@ -172,7 +201,7 @@
     overflow-x: auto;
     margin-top: 10px;
   }
-  pre.code .dim { color: var(--gray-500); }
+  pre.code .dim { color: var(--text-mute); }
   pre.code .kw  { color: #C9B98A; }
   pre.code .str { color: #A8BC8C; }
 
@@ -184,9 +213,9 @@
   }
 
   .panel {
-    border: 1.5px solid var(--gray-300);
+    border: 1.5px solid var(--border);
     border-radius: 12px;
-    background: #fff;
+    background: var(--surface);
     padding: 18px 20px;
     margin-bottom: 20px;
   }
@@ -197,7 +226,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--gray-500);
+    color: var(--text-mute);
     margin-bottom: 12px;
   }
 
@@ -207,19 +236,19 @@
   .key-files .path {
     font-family: var(--mono);
     font-size: 12px;
-    color: var(--slate);
+    color: var(--text);
     display: block;
     margin-bottom: 2px;
     word-break: break-all;
   }
   .key-files .desc {
     font-size: 12.5px;
-    color: var(--gray-500);
+    color: var(--text-mute);
     line-height: 1.45;
   }
 
   .gotchas {
-    border: 1.5px solid var(--clay);
+    border: 1.5px solid var(--accent);
     border-radius: 12px;
     background: rgba(217,119,87,0.06);
     padding: 18px 20px;
@@ -230,7 +259,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--clay);
+    color: var(--accent);
     margin-bottom: 10px;
   }
   .gotchas ul { list-style: none; padding: 0; }
@@ -245,13 +274,66 @@
     position: absolute;
     left: 0; top: 8px;
     width: 5px; height: 5px;
-    background: var(--clay);
+    background: var(--accent);
     border-radius: 2px;
   }
   .gotchas code { font-family: var(--mono); font-size: 11.5px; }
+/* ── semantic roles — dark ── */
+  [data-theme="dark"] {
+    --bg:        #1A1815;
+    --surface:   #211F1B;
+    --text:      #ECEAE3;
+    --text-soft: #C9C6BD;
+    --text-mute: #9C9A93;
+    --border:    #3A382F;
+    --fill:      #26241E;
+    --accent:    var(--clay-soft);
+    --accent-strong: #D97757;
+    --tint:      #2E2A22;
+    color-scheme: dark;
+  }
+
+  /* re-theme attribute-based SVG for dark — CSS fill/stroke override the SVG
+     presentation attributes, so charts/diagrams adapt without editing the SVG.
+     Mid-tones (#87867F, oat, olive, clay) are left as-is: they read on both themes. */
+  [data-theme="dark"] svg [fill="#141413"],
+  [data-theme="dark"] svg [fill="#3D3D3A"] { fill: var(--text); }
+  [data-theme="dark"] svg [fill="#FAF9F5"],
+  [data-theme="dark"] svg [fill="#FFFFFF"],
+  [data-theme="dark"] svg [fill="#F0EEE6"] { fill: var(--surface); }
+  [data-theme="dark"] svg [stroke="#141413"],
+  [data-theme="dark"] svg [stroke="#3D3D3A"] { stroke: var(--text); }
+  [data-theme="dark"] svg [stroke="#D1CFC5"],
+  [data-theme="dark"] svg [stroke="#E6E3DA"],
+  [data-theme="dark"] svg [stroke="#F0EEE6"] { stroke: var(--border); }
+  /* ── theme toggle (identical across the gallery) ── */
+  .theme-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 1000;
+    width: 38px; height: 38px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+  }
+  .theme-toggle:hover { border-color: var(--text); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .theme-toggle svg { width: 18px; height: 18px; }
+  .theme-toggle .sun  { display: none; }
+  .theme-toggle .moon { display: block; }
+  [data-theme="dark"] .theme-toggle .sun  { display: block; }
+  [data-theme="dark"] .theme-toggle .moon { display: none; }
+  @media print { .theme-toggle { display: none; } }
 </style>
 </head>
 <body>
+<button class="theme-toggle" type="button" aria-label="Switch between light and dark theme" title="Switch theme">
+  <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.1 5.1l1.6 1.6M17.3 17.3l1.6 1.6M18.9 5.1l-1.6 1.6M6.7 17.3l-1.6 1.6"/></svg>
+  <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.6A8.2 8.2 0 1 1 9.4 3.5a6.4 6.4 0 0 0 11.1 11.1z"/></svg>
+</button>
 <div class="page">
 
   <header>
@@ -486,6 +568,24 @@ router.get(<span class="str">'/session'</span>, verifyToken, (req, res) =&gt; {
       });
     });
   });
+</script>
+<script>
+/* Theme toggle: flip data-theme, persist the choice, and keep following the OS
+   until the user makes an explicit choice. */
+(function () {
+  var root = document.documentElement;
+  var btn = document.querySelector(".theme-toggle");
+  if (btn) btn.addEventListener("click", function () {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+  var mq = window.matchMedia && matchMedia("(prefers-color-scheme: dark)");
+  if (mq && mq.addEventListener) mq.addEventListener("change", function (e) {
+    try { if (localStorage.getItem("theme")) return; } catch (_) {}
+    root.setAttribute("data-theme", e.matches ? "dark" : "light");
+  });
+})();
 </script>
 </body>
 </html>
