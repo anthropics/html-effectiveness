@@ -210,6 +210,7 @@
     border-radius: 8px;
     padding: 10px 11px 9px;
     cursor: grab;
+    -webkit-user-select: none;
     user-select: none;
     transition: border-color 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
   }
@@ -307,7 +308,7 @@
   <div class="toolbar">
     <div class="summary" id="summary"></div>
     <div class="spacer"></div>
-    <button class="filter-active" id="filterBadge"></button>
+    <button class="filter-active" id="filterBadge" aria-label="Active filter"></button>
     <button class="ghost" id="resetBtn">Reset</button>
     <button class="primary" id="copyBtn">Copy as markdown</button>
   </div>
